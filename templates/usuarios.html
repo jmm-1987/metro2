@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Usuarios{% endblock %}
+{% block content %}
+<h2>Usuarios</h2>
+<a href="/crear_usuario" class="btn btn-primary mb-3">Crear usuario</a>
+<div class="card-list">
+{% for usuario in usuarios %}
+  <div class="card">
+    <div class="d-flex align-items-center mb-2">
+      <a href="/editar_usuario/{{ usuario.id }}" class="fw-bold text-decoration-none me-2">{{ usuario.nombre }}</a>
+      <a href="/editar_usuario/{{ usuario.id }}" title="Editar usuario" class="text-warning"><i class="bi bi-pencil-square"></i></a>
+      {% if usuario.es_admin %}
+        <span class="badge bg-warning text-dark ms-2">Admin</span>
+      {% endif %}
+    </div>
+    <div class="mb-1"><span class="fw-bold">ID:</span> {{ usuario.id }}</div>
+    <div class="mb-1"><span class="fw-bold">Administrador:</span> {% if usuario.es_admin %}Sí{% else %}No{% endif %}</div>
+    <div class="mb-1"><span class="fw-bold">Email:</span> {{ usuario.email or '-' }}</div>
+    <div class="mb-1"><span class="fw-bold">Teléfono:</span> {{ usuario.telefono or '-' }}</div>
+  </div>
+{% else %}
+  <div class="card"><em>No hay usuarios registrados.</em></div>
+{% endfor %}
+</div>
+{% endblock %} 

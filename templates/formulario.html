@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Valoración</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #2b2b2b;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #2b2b2b;
+        }
+
+        .header {
+            width: 100%;
+        }
+
+        .header-top {
+            background: #2b2b2b;
+            padding: 32px 0 18px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .logo {
+            text-align: center;
+        }
+
+        #logo {
+            max-width: 200px;
+        }
+
+        .yellow-band {
+            background: #c7a962;
+            height: 50px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-menu {
+            display: flex;
+            gap: 32px;
+        }
+
+        .main-menu a {
+            color: #23211e;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: color 0.2s;
+        }
+
+        .main-menu a:hover {
+            color: #000;
+        }
+
+        .container {
+            background: #fff;
+            max-width: 450px;
+            margin: 40px auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+            padding: 32px 28px 24px 28px;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 7px;
+            color: #23211e;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #c7a962;
+            border-radius: 6px;
+            font-size: 1rem;
+            background: #f9f7f3;
+            color: #23211e;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 6px;
+            font-size: 1.5rem;
+            color: #f7ecd3;
+            cursor: pointer;
+        }
+
+        .star-rating .fas {
+            transition: color 0.2s;
+        }
+
+        .star-rating .fas.selected,
+        .star-rating .fas:hover,
+        .star-rating .fas:hover ~ .fas {
+            color: #c7a962;
+        }
+
+        button[type="submit"] {
+            background: #c7a962;
+            color: #23211e;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 0;
+            width: 100%;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button[type="submit"]:hover {
+            background: #b89a4c;
+        }
+
+        .thank-you-page {
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .thank-you-page h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .thank-you-page p {
+            color: #666;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .form-title {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #2b2b2b;
+            margin-bottom: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <div class="header-top">
+            <div class="logo">
+                <a href="https://www.m2merida.com/" target="_blank">
+                    <img src="logoraul.png" alt="Logo" id="logo">
+                </a>
+            </div>
+        </div>
+        <div class="yellow-band">
+            <nav class="main-menu">
+            </nav>
+        </div>
+    </div>
+
+    <div class="container">
+        <form id="ratingForm">
+            <h2 class="form-title">Formulario de valoración</h2>
+            <div class="form-group">
+                <label for="name">Nombre:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="visitDate">Fecha de visita:</label>
+                <input type="date" id="visitDate" name="visitDate" required>
+            </div>
+
+            <div class="form-group">
+                <label>Atención recibida:</label>
+                <div class="star-rating">
+                    <i class="fas fa-star" data-rating="1"></i>
+                    <i class="fas fa-star" data-rating="2"></i>
+                    <i class="fas fa-star" data-rating="3"></i>
+                    <i class="fas fa-star" data-rating="4"></i>
+                    <i class="fas fa-star" data-rating="5"></i>
+                </div>
+                <input type="hidden" id="attentionRating" name="attentionRating" required>
+            </div>
+
+            <div class="form-group">
+                <label>Tiempo de respuesta:</label>
+                <div class="star-rating">
+                    <i class="fas fa-star" data-rating="1"></i>
+                    <i class="fas fa-star" data-rating="2"></i>
+                    <i class="fas fa-star" data-rating="3"></i>
+                    <i class="fas fa-star" data-rating="4"></i>
+                    <i class="fas fa-star" data-rating="5"></i>
+                </div>
+                <input type="hidden" id="responseRating" name="responseRating" required>
+            </div>
+
+            <div class="form-group">
+                <label for="suggestion">Sugerencia de mejora:</label>
+                <textarea id="suggestion" name="suggestion" rows="4"></textarea>
+            </div>
+
+            <button type="submit">Enviar valoración</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('visitDate').value = today;
+
+            function setupStarRating(starContainer, hiddenInput) {
+                const stars = starContainer.querySelectorAll('.fa-star');
+
+                stars.forEach(star => {
+                    star.addEventListener('click', function () {
+                        const rating = this.getAttribute('data-rating');
+                        hiddenInput.value = rating;
+                        stars.forEach(s => {
+                            if (s.getAttribute('data-rating') <= rating) {
+                                s.classList.add('active');
+                            } else {
+                                s.classList.remove('active');
+                            }
+                        });
+                    });
+
+                    star.addEventListener('mouseover', function () {
+                        const rating = this.getAttribute('data-rating');
+                        stars.forEach(s => {
+                            s.style.color = s.getAttribute('data-rating') <= rating ? '#FFD700' : '#ddd';
+                        });
+                    });
+
+                    star.addEventListener('mouseout', function () {
+                        const currentRating = hiddenInput.value;
+                        stars.forEach(s => {
+                            s.style.color = s.getAttribute('data-rating') <= currentRating ? '#FFD700' : '#ddd';
+                        });
+                    });
+                });
+            }
+
+            setupStarRating(document.querySelectorAll('.star-rating')[0], document.getElementById('attentionRating'));
+            setupStarRating(document.querySelectorAll('.star-rating')[1], document.getElementById('responseRating'));
+
+            async function submitToGoogleSheets(formData) {
+                try {
+                    await fetch('https://script.google.com/macros/s/AKfycbwwkg3vnQvcIdgIldg3O5A_niiXFcyNRt6XjfULbcwlgMQ1bwT9oUJ4ogTE9BemeBNy/exec', {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                    return true;
+                } catch (error) {
+                    console.error('Error al enviar datos:', error);
+                    return false;
+                }
+            }
+
+            document.getElementById('ratingForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const name = document.getElementById('name').value;
+                const attentionRating = document.getElementById('attentionRating').value;
+                const responseRating = document.getElementById('responseRating').value;
+
+                if (!name || !attentionRating || !responseRating) {
+                    alert('Por favor, completa todos los campos requeridos');
+                    return;
+                }
+
+                const formData = {
+                    nombre: name,
+                    fechaVisita: document.getElementById('visitDate').value,
+                    atencionRecibida: attentionRating,
+                    tiempoRespuesta: responseRating,
+                    sugerencia: document.getElementById('suggestion').value,
+                    timestamp: new Date().toISOString()
+                };
+
+                const success = await submitToGoogleSheets(formData);
+
+                if (parseInt(attentionRating) === 5 && parseInt(responseRating) === 5) {
+                    window.location.href = 'https://g.page/r/CdkfTf1l_JOeEBM/review';
+                } else {
+                    document.querySelector('.container').innerHTML = `
+                        <div class="thank-you-page">
+                            <h1>¡Gracias por tu valoración!</h1>
+                            <p>Tu opinión es muy importante para nosotros. Trabajaremos para mejorar nuestros servicios.</p>
+                        </div>
+                    `;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

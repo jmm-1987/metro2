@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Editar usuario{% endblock %}
+{% block content %}
+<div class="card" style="max-width:520px;margin:auto;">
+  <div class="card-header-gradient">
+    <span class="icon"><i class="bi bi-person-badge"></i></span> Editar usuario
+  </div>
+  <form method="POST" style="padding:1.2rem 0 0 0;">
+      {{ form.hidden_tag() }}
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-person"></i></span>
+          {{ form.nombre.label }}
+          {{ form.nombre(class_='form-control') }}
+      </div>
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-key"></i></span>
+          {{ form.password.label }}
+          {{ form.password(class_='form-control') }}
+      </div>
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-envelope"></i></span>
+          {{ form.email.label }}
+          {{ form.email(class_='form-control') }}
+      </div>
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-telephone"></i></span>
+          {{ form.telefono.label }}
+          {{ form.telefono(class_='form-control') }}
+      </div>
+      <hr class="decor-sep">
+      <div class="mb-3">
+          {{ form.es_admin() }} {{ form.es_admin.label }}
+      </div>
+      <button type="submit" class="btn btn-success w-100 mt-2">Guardar cambios</button>
+  </form>
+</div>
+{% endblock %} 

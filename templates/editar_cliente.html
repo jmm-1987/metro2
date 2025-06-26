@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% block title %}Editar cliente{% endblock %}
+{% block content %}
+<style>
+.radio-color { display: none; }
+.color-dot {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    vertical-align: middle;
+    cursor: pointer;
+    margin-right: 8px;
+    box-shadow: none;
+    transition: box-shadow 0.2s;
+}
+.radio-color:checked + .color-dot {
+    box-shadow: 0 0 0 3px #bfa134;
+    border: 2px solid #bfa134;
+}
+</style>
+<div class="container" style="max-width:1200px;">
+  <div class="row">
+    <!-- Columna izquierda: Formulario -->
+    <div class="col-md-7">
+      <div class="card mb-3">
+        <div class="card-header-gradient">
+          <span class="icon"><i class="bi bi-person-circle"></i></span> Editar cliente
+        </div>
+        <form method="POST" style="padding:1.2rem 0 0 0;">
+            {{ form.hidden_tag() }}
+            <div class="row mb-3">
+              <div class="col-6">
+                <span class="icon"><i class="bi bi-person"></i></span>
+                {{ form.nombre.label }}
+                {{ form.nombre(class_='form-control') }}
+              </div>
+              <div class="col-6">
+                <span class="icon"><i class="bi bi-geo-alt"></i></span>
+                {{ form.localidad.label }}
+                {{ form.localidad(class_='form-control') }}
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-4">
+                <span class="icon"><i class="bi bi-envelope"></i></span>
+                {{ form.email.label }}
+                {{ form.email(class_='form-control') }}
+              </div>
+              <div class="col-4">
+                <span class="icon"><i class="bi bi-telephone"></i></span>
+                {{ form.telefono.label }}
+                {{ form.telefono(class_='form-control') }}
+              </div>
+              <div class="col-4">
+                {{ form.fecha_creacion.label }}
+                {{ form.fecha_creacion(class_='form-control', readonly=true) }}
+              </div>
+            </div>
+            <hr class="decor-sep">
+            <div class="row mb-3">
+              <div class="col-6">
+                {{ form.comercial_id.label }}
+                {{ form.comercial_id(class_='form-select') }}
+              </div>
+              <div class="col-6">
+                {{ form.inmueble_id.label }}
+                {{ form.inmueble_id(class_='form-select') }}
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-4">
+                {{ form.tipo_cliente.label }}
+                {{ form.tipo_cliente(class_='form-select') }}
+              </div>
+              <div class="col-md-4">
+                {{ form.interes.label }}<br>
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  {% for subfield in form.interes %}
+                    <label style="font-weight:normal;">
+                      {{ subfield() }} {{ subfield.label.text }}
+                    </label>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="col-md-4">
+                {{ form.temperatura.label }}<br>
+                <div id="temperatura-puntos" style="display:flex;gap:8px;">
+                  {% for subfield in form.temperatura %}
+                    {% if subfield.data == 1 %}
+                      {% set color = '#e0e0e0' %}
+                    {% elif subfield.data == 2 %}
+                      {% set color = '#b3e5fc' %}
+                    {% elif subfield.data == 3 %}
+                      {% set color = '#ffe082' %}
+                    {% elif subfield.data == 4 %}
+                      {% set color = '#ffb74d' %}
+                    {% elif subfield.data == 5 %}
+                      {% set color = '#e57373' %}
+                    {% endif %}
+                    <label style="cursor:pointer;display:inline-block;">
+                      {{ subfield(class_='radio-color') }}
+                      <span class="color-dot" style="background:{{ color }};"></span>
+                    </label>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-6">
+                <div class="input-icon">
+                  <span class="icon"><i class="bi bi-currency-dollar"></i></span>
+                  {{ form.precio_min.label }}
+                  {{ form.precio_min(class_='form-control form-control-sm', step='1') }}
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="input-icon">
+                  <span class="icon"><i class="bi bi-currency-dollar"></i></span>
+                  {{ form.precio_max.label }}
+                  {{ form.precio_max(class_='form-control form-control-sm', step='1') }}
+                </div>
+              </div>
+            </div>
+            <div class="input-icon mb-3">
+                <span class="icon"><i class="bi bi-chat-dots"></i></span>
+                {{ form.observaciones.label }}
+                {{ form.observaciones(class_='form-control') }}
+            </div>
+            <button type="submit" class="btn btn-success w-100 mt-2">Guardar cambios</button>
+        </form>
+      </div>
+    </div>
+    <!-- Columna derecha: Tarjetas -->
+    <div class="col-md-5">
+      <!-- Inmuebles de interés -->
+      <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+          <i class="bi bi-house"></i> Inmuebles de interés
+        </div>
+        <div class="card-body" style="max-height:250px;overflow:auto;">
+          {% if inmuebles_interes %}
+            <ul class="list-group list-group-flush">
+              {% for inmueble in inmuebles_interes %}
+                <li class="list-group-item">
+                  <strong>{{ inmueble.direccion }}</strong><br>
+                  {{ inmueble.categoria }}<br>
+                  Precio: {{ inmueble.precio_min }} - {{ inmueble.precio_max }} €
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="text-muted">No hay inmuebles que coincidan con el interés del cliente.</div>
+          {% endif %}
+        </div>
+      </div>
+      <!-- Actividad del cliente -->
+      <div class="card">
+        <div class="card-header bg-info text-white">
+          <i class="bi bi-clock-history"></i> Actividad del cliente
+        </div>
+        <div class="card-body" style="max-height:250px;overflow:auto;">
+          {% if registros_cliente %}
+            <ul class="list-group list-group-flush">
+              {% for registro, inmueble in registros_cliente %}
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                  <div>
+                    <strong>{{ registro.fecha.strftime('%d/%m/%Y') }}</strong>: {{ registro.comentario }}
+                    {% if inmueble %}
+                      <br><span class="text-muted" style="font-size:0.95em;">Inmueble: {{ inmueble.direccion }}</span>
+                    {% endif %}
+                  </div>
+                  <a href="{{ url_for('editar_registro', registro_id=registro.id) }}" class="ms-2" title="Editar registro"><i class="bi bi-pencil-square"></i></a>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="text-muted">No hay actividad registrada para este cliente.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

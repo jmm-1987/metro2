@@ -1,0 +1,280 @@
+body {
+    background: linear-gradient(120deg, #fffbe6 0%, #fff 100%);
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+    color: #222;
+}
+
+.navbar {
+    background: #222 !important;
+    border-bottom: 4px solid #d4af37;
+}
+
+.navbar-brand, .navbar-nav .nav-link {
+    color: #d4af37 !important;
+    font-weight: 600;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+}
+
+.navbar-brand img {
+    height: 40px;
+    margin-right: 10px;
+}
+
+.navbar-nav .nav-link.active, .navbar-nav .nav-link:hover {
+    color: #fff !important;
+    background: #d4af37;
+    border-radius: 5px;
+}
+
+.btn-primary, .btn-success {
+    background: #d4af37;
+    border: none;
+    color: #222;
+    font-weight: 600;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(212,175,55,0.10), 0 0 0 0 #d4af37;
+    letter-spacing: 0.5px;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover, .btn-success:hover {
+    background: #bfa134;
+    color: #fff;
+    box-shadow: 0 2px 12px 2px #ffe082, 0 0 8px 2px #d4af37;
+}
+
+.table thead {
+    background: #222;
+    color: #d4af37;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: #f9f6ef;
+}
+
+.alert-info {
+    background: #fffbe6;
+    color: #bfa134;
+    border: 1px solid #d4af37;
+}
+
+h2 {
+    color: #bfa134;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 1.2rem;
+}
+
+/* Modernización visual */
+.card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 2px 16px rgba(34,34,34,0.08), 0 1.5px 4px rgba(212,175,55,0.08);
+    padding: 1.5rem 1.2rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #f3e9c7;
+    transition: box-shadow 0.25s, transform 0.18s;
+}
+.card:hover {
+    box-shadow: 0 8px 32px 0 rgba(212,175,55,0.18), 0 2px 8px rgba(34,34,34,0.10);
+    transform: translateY(-4px) scale(1.012);
+}
+
+/* Espaciado general */
+.container {
+    padding-bottom: 2.5rem;
+}
+
+/* Tarjetas de clientes, usuarios, inmuebles */
+.card-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1.5px solid #d4af37;
+    box-shadow: none;
+    transition: border 0.2s, box-shadow 0.2s;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #bfa134;
+    box-shadow: 0 0 0 2px #fffbe6, 0 0 8px 1px #d4af37;
+    transition: box-shadow 0.18s, border 0.18s;
+}
+
+.table {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 8px rgba(212,175,55,0.07);
+}
+
+/* Cabecera de tarjeta con degradado */
+.card-header-gradient {
+    background: linear-gradient(90deg, #d4af37 0%, #fffbe6 100%);
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    padding: 1rem 1.2rem 0.7rem 1.2rem;
+    margin: -1.5rem -1.2rem 1.2rem -1.2rem;
+    color: #222;
+    font-weight: 700;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    box-shadow: 0 2px 8px rgba(212,175,55,0.10);
+}
+
+/* Iconos en campos de formulario */
+.input-icon {
+    position: relative;
+}
+.input-icon input, .input-icon select {
+    padding-left: 2.2rem !important;
+}
+.input-icon .icon {
+    position: absolute;
+    left: 0.7rem;
+    top: 55%;
+    transform: translateY(-50%);
+    color: #bfa134;
+    font-size: 1.1em;
+    pointer-events: none;
+}
+
+/* Feedback visual inmediato (validación) */
+.input-valid {
+    border-color: #4caf50 !important;
+    box-shadow: 0 0 0 2px #c8e6c9;
+}
+.input-invalid {
+    border-color: #e74c3c !important;
+    box-shadow: 0 0 0 2px #ffebee;
+}
+
+/* Separador decorativo */
+.decor-sep {
+    border: none;
+    border-top: 2px dotted #d4af37;
+    margin: 1.2rem 0 1.5rem 0;
+}
+
+.dashboard-card {
+    border-radius: 18px;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.dashboard-card:hover {
+    box-shadow: 0 8px 32px 0 rgba(212,175,55,0.18), 0 2px 8px rgba(34,34,34,0.10);
+    transform: translateY(-4px) scale(1.03);
+}
+
+.dashboard-card-big {
+    max-height: 70vh;
+    min-height: 350px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.dashboard-card-big .card-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+}
+
+.dashboard-card-tall {
+    min-height: 0;
+    max-height: none;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
+.dashboard-card-tall .card-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+}
+
+.calendar-style {
+    border: 2px solid #e0e0e0;
+    background: linear-gradient(180deg, #fffbe6 0%, #fff 100%);
+    box-shadow: 0 2px 16px rgba(212,175,55,0.08);
+}
+.calendar-header {
+    background: #f7f3e3;
+    border-bottom: 2px solid #e0e0e0;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    font-size: 1.1em;
+}
+.fab-inside-card {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    z-index: 10;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    box-shadow: 0 4px 16px rgba(212,175,55,0.18);
+    padding: 0;
+}
+.fab-inside-card i { pointer-events: none; }
+.temp-badge-1 { background: #e0e0e0; color: #222; }
+.temp-badge-2 { background: #b3e5fc; color: #01579b; }
+.temp-badge-3 { background: #ffe082; color: #bfa134; }
+.temp-badge-4 { background: #ffb74d; color: #e65100; }
+.temp-badge-5 { background: #e57373; color: #b71c1c; }
+
+.clientes-scroll-list {
+    max-height: 220px;
+    overflow-y: auto;
+    margin-bottom: 0.5rem;
+}
+.cliente-row {
+    transition: background 0.2s;
+}
+.cliente-temp-1 { background: #e0e0e0; }
+.cliente-temp-2 { background: #b3e5fc; }
+.cliente-temp-3 { background: #ffe082; }
+.cliente-temp-4 { background: #ffb74d; }
+.cliente-temp-5 { background: #e57373; }
+.cliente-row:hover { filter: brightness(0.97); }
+
+/* Ajuste: tarjetas de la columna derecha con tamaños fijos y scroll solo en clientes */
+.dashboard-col-tall {
+    max-height: 70vh;
+    min-height: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    /* Quitar overflow: hidden para permitir scroll en clientes */
+}
+.dashboard-col-tall-inner {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.dashboard-card-clientes {
+    height: 320px;
+    min-height: 220px;
+    max-height: 350px;
+    display: flex;
+    flex-direction: column;
+}
+.dashboard-card-clientes .card-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+}
+.dashboard-card-peque {
+    height: 120px;
+    min-height: 100px;
+    max-height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centra el contenido verticalmente */
+} 

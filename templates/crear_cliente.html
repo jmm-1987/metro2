@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block title %}Crear cliente{% endblock %}
+{% block content %}
+<div class="card" style="max-width:800px;margin:auto;">
+  <div class="card-header-gradient">
+    <span class="icon"><i class="bi bi-person-plus"></i></span> Crear cliente
+  </div>
+  <style>
+  .radio-color { display: none; }
+  .color-dot {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #ccc;
+      vertical-align: middle;
+      cursor: pointer;
+      margin-right: 8px;
+      box-shadow: none;
+      transition: box-shadow 0.2s;
+  }
+  .radio-color:checked + .color-dot {
+      box-shadow: 0 0 0 3px #bfa134;
+      border: 2px solid #bfa134;
+  }
+  </style>
+  <form method="POST" style="padding:1.2rem 0 0 0;">
+      {{ form.hidden_tag() }}
+      <div class="row mb-3">
+        <div class="col-6">
+          <span class="icon"><i class="bi bi-person"></i></span>
+          {{ form.nombre.label }}
+          {{ form.nombre(class_='form-control') }}
+        </div>
+        <div class="col-6">
+          <span class="icon"><i class="bi bi-geo-alt"></i></span>
+          {{ form.localidad.label }}
+          {{ form.localidad(class_='form-control') }}
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-4">
+          <span class="icon"><i class="bi bi-envelope"></i></span>
+          {{ form.email.label }}
+          {{ form.email(class_='form-control') }}
+        </div>
+        <div class="col-4">
+          <span class="icon"><i class="bi bi-telephone"></i></span>
+          {{ form.telefono.label }}
+          {{ form.telefono(class_='form-control') }}
+        </div>
+        <div class="col-4">
+          {{ form.fecha_creacion.label }}
+          {{ form.fecha_creacion(class_='form-control', readonly=true) }}
+        </div>
+      </div>
+      <hr class="decor-sep">
+      <div class="row mb-3">
+        <div class="col-6">
+          {{ form.comercial_id.label }}
+          {{ form.comercial_id(class_='form-select') }}
+        </div>
+        <div class="col-6">
+          {{ form.inmueble_id.label }}
+          {{ form.inmueble_id(class_='form-select') }}
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-md-4">
+          {{ form.tipo_cliente.label }}
+          {{ form.tipo_cliente(class_='form-select') }}
+        </div>
+        <div class="col-md-4">
+          {{ form.interes.label }}<br>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            {% for subfield in form.interes %}
+              <label style="font-weight:normal;">
+                {{ subfield() }} {{ subfield.label.text }}
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-md-4">
+          {{ form.temperatura.label }}<br>
+          <div id="temperatura-puntos" style="display:flex;gap:8px;">
+            {% for subfield in form.temperatura %}
+              {% if subfield.data == 1 %}
+                {% set color = '#e0e0e0' %}
+              {% elif subfield.data == 2 %}
+                {% set color = '#b3e5fc' %}
+              {% elif subfield.data == 3 %}
+                {% set color = '#ffe082' %}
+              {% elif subfield.data == 4 %}
+                {% set color = '#ffb74d' %}
+              {% elif subfield.data == 5 %}
+                {% set color = '#e57373' %}
+              {% endif %}
+              <label style="cursor:pointer;display:inline-block;">
+                {{ subfield(class_='radio-color') }}
+                <span class="color-dot" style="background:{{ color }};"></span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-6">
+          <div class="input-icon">
+            <span class="icon"><i class="bi bi-currency-dollar"></i></span>
+            {{ form.precio_min.label }}
+            {{ form.precio_min(class_='form-control form-control-sm', step='1') }}
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="input-icon">
+            <span class="icon"><i class="bi bi-currency-dollar"></i></span>
+            {{ form.precio_max.label }}
+            {{ form.precio_max(class_='form-control form-control-sm', step='1') }}
+          </div>
+        </div>
+      </div>
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-chat-dots"></i></span>
+          {{ form.observaciones.label }}
+          {{ form.observaciones(class_='form-control') }}
+      </div>
+      <button type="submit" class="btn btn-success w-100 mt-2">Crear cliente</button>
+  </form>
+</div>
+{% endblock %} 

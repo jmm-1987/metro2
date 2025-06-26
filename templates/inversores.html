@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Inversores{% endblock %}
+{% block content %}
+<h2 class="mb-3">Inversores</h2>
+<form id="form-mailing" method="post">
+<div class="table-responsive">
+<table class="table table-hover align-middle shadow-sm bg-white rounded">
+    <thead class="table-light">
+        <tr>
+            <th><input type="checkbox" id="check-all" onclick="toggleAll(this)"></th>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Estado</th>
+            <th>Comercial</th>
+            <th>Inmueble</th>
+            <th>Localidad</th>
+            <th>Interés</th>
+            <th>Rango de precios</th>
+            <th>Encuesta</th>
+            <th>Fecha de alta</th>
+            <th>Editar</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for cliente in clientes %}
+        <tr>
+            <td><input type="checkbox" name="seleccionados" value="{{ cliente.id }}"></td>
+            <td>
+                {% if cliente.temperatura %}
+                  {% set temp_color_map = {1: '#e0e0e0', 2: '#b3e5fc', 3: '#ffe082', 4: '#ffb74d', 5: '#e57373'} %}
+                  <span title="Temperatura {{ cliente.temperatura }}" style="display:inline-block;width:18px;height:18px;border-radius:50%;background:{{ temp_color_map[cliente.temperatura] }};border:2px solid #ccc;vertical-align:middle;margin-right:6px;"></span>
+                {% endif %}
+                <a href="/editar_cliente/{{ cliente.id }}" class="fw-bold text-decoration-none">{{ cliente.nombre }}</a>
+            </td>
+            <td>{{ cliente.telefono }}</td>
+            <td><span class="badge bg-secondary">{{ cliente.estado.replace('_', ' ').capitalize() }}</span></td>
+            <td>{{ cliente.comercial_id if not cliente.comercial_id else (usuarios_dict[cliente.comercial_id] if usuarios_dict and cliente.comercial_id in usuarios_dict else 'Sin asignar') }}</td>
+            <td>{{ cliente.inmueble_id if not cliente.inmueble_id else (inmuebles_dict[cliente.inmueble_id] if inmuebles_dict and cliente.inmueble_id in inmuebles_dict else 'Sin asignar') }}</td>
+            <td>{{ cliente.localidad or '-' }}</td>
+            <td>
+                {% if cliente.interes %}
+                  {% for interes in cliente.interes.split(',') %}
+                    <span class="badge bg-warning text-dark">{{ interes }}</span>
+                  {% endfor %}
+                {% else %}-{% endif %}
+            </td>
+            <td>{{ cliente.precio_min }} - {{ cliente.precio_max }}</td>
+            <td><input type="checkbox" disabled {% if cliente.encuesta_enviada %}checked{% endif %}></td>
+            <td>{% if cliente.fecha_creacion %}{{ cliente.fecha_creacion.strftime('%d/%m/%Y') }}{% else %}-{% endif %}</td>
+            <td><a href="/editar_cliente/{{ cliente.id }}" title="Editar cliente" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil-square"></i></a></td>
+        </tr>
+    {% else %}
+        <tr><td colspan="12"><em>No hay inversores registrados.</em></td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+</form>
+<script>
+function toggleAll(source) {
+  checkboxes = document.getElementsByName('seleccionados');
+  for(var i=0, n=checkboxes.length;i<n;i++) {
+    checkboxes[i].checked = source.checked;
+  }
+}
+</script>
+{% endblock %} 

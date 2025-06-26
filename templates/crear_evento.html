@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Crear evento{% endblock %}
+{% block content %}
+<div class="card" style="max-width:520px;margin:auto;">
+  <div class="card-header-gradient">
+    <span class="icon"><i class="bi bi-calendar-plus"></i></span> Crear evento
+  </div>
+  <form method="POST" style="padding:1.2rem 0 0 0;">
+      {{ form.hidden_tag() }}
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-type"></i></span>
+          {{ form.titulo.label }}
+          {{ form.titulo(class_='form-control') }}
+      </div>
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-calendar"></i></span>
+          {{ form.fecha.label }}
+          {{ form.fecha(class_='form-control') }}
+      </div>
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-clock"></i></span>
+          {{ form.hora_inicio.label }}
+          {{ form.hora_inicio(class_='form-control', step='900') }}
+      </div>
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-clock-history"></i></span>
+          {{ form.hora_fin.label }}
+          {{ form.hora_fin(class_='form-control', step='900') }}
+      </div>
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-person"></i></span>
+          {{ form.usuario_id.label }}
+          {{ form.usuario_id(class_='form-select') }}
+      </div>
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-person"></i></span>
+          {{ form.cliente_id.label }}
+          {{ form.cliente_id(class_='form-select') }}
+      </div>
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-house"></i></span>
+          {{ form.inmueble_id.label }}
+          {{ form.inmueble_id(class_='form-select') }}
+      </div>
+      <button type="submit" class="btn btn-success w-100 mt-2">Crear evento</button>
+  </form>
+</div>
+{% endblock %} 

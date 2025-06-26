@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Inicio{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+  <div class="col-12 col-lg-11">
+    <div class="row g-4">
+      <!-- Tarjeta grande: Eventos próximos -->
+      <div class="col-lg-8">
+        <div class="card shadow h-100 dashboard-card dashboard-card-big p-0 position-relative calendar-style">
+          <a href="{{ url_for('calendario') }}" class="position-absolute top-0 end-0 m-3 text-secondary" title="Ver calendario" style="font-size:1.7em;"><i class="bi bi-calendar3"></i></a>
+          <div class="calendar-header p-3 d-flex align-items-center justify-content-between">
+            <span class="fw-bold"><i class="bi bi-calendar-event me-2"></i>Próximos eventos</span>
+            <!--<span class="text-muted">{{ now.strftime('%B %Y') }}</span>-->
+          </div>
+          <div class="card-body pt-0">
+            {% if eventos_proximos %}
+              <ul class="list-group list-group-flush">
+                {% set dias = {'Mon':'Lun', 'Tue':'Mar', 'Wed':'Mié', 'Thu':'Jue', 'Fri':'Vie', 'Sat':'Sáb', 'Sun':'Dom'} %}
+                {% for evento in eventos_proximos %}
+                <li class="list-group-item d-flex align-items-center justify-content-between">
+                  <div>
+                    <span class="fw-bold">
+                      {{ dias[evento.fecha.strftime('%a')] }} {{ evento.fecha.strftime('%d/%m/%Y') }}
+                      {% if evento.hora_inicio %} {{ evento.hora_inicio.strftime('%H:%M') }}{% endif %}
+                      {% if evento.hora_fin %} - {{ evento.hora_fin.strftime('%H:%M') }}{% endif %}
+                    </span> — {{ evento.titulo }}
+                  </div>
+                  <span class="badge bg-primary">Comercial: {{ evento.usuario.nombre }}</span>
+                </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <div class="text-muted">No hay eventos próximos.</div>
+            {% endif %}
+            <a href="{{ url_for('crear_evento') }}" class="btn btn-success fab-inside-card" title="Crear evento"><i class="bi bi-plus-lg"></i></a>
+            <div class="text-end mt-3">
+              <a href="{{ url_for('eventos') }}" class="btn btn-outline-primary btn-sm">Ver todos los eventos</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Tarjeta de clientes con totales por temperatura -->
+      <div class="col-lg-4">
+        <div class="dashboard-col-tall">
+          <div class="dashboard-col-tall-inner">
+            <div class="col-12">
+              <a href="{{ url_for('clientes') }}" class="text-decoration-none">
+                <div class="card shadow h-100 dashboard-card dashboard-card-clientes position-relative">
+                  <div class="card-body pb-0 px-2">
+                    <div class="clientes-scroll-list mb-1">
+                      {% for cliente in clientes_list %}
+                        <a href="/editar_cliente/{{ cliente.id }}" class="d-block text-decoration-none text-dark">
+                          <div class="cliente-row cliente-temp-{{ cliente.temperatura }} d-flex align-items-center px-2 py-1 mb-1 rounded" style="font-size:1em;min-height:32px;">
+                            <span class="fw-bold flex-grow-1 text-truncate">{{ cliente.nombre }}</span>
+                          </div>
+                        </a>
+                      {% else %}
+                        <div class="text-muted">No hay clientes.</div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              </a>
+            </div>
+            <div class="col-12">
+              <a href="{{ url_for('respuestas_formulario') }}" class="text-decoration-none">
+                <div class="card text-center shadow h-100 dashboard-card dashboard-card-peque">
+                  <div class="card-body">
+                    <i class="bi bi-whatsapp display-5 mb-2"></i>
+                    <h5 class="card-title">Encuesta satisfacción</h5>
+                    <p class="card-text">Enviar encuesta por WhatsApp</p>
+                  </div>
+                </div>
+              </a>
+            </div>
+            <div class="col-12">
+              <a href="{{ url_for('registros') }}" class="text-decoration-none">
+                <div class="card text-center shadow h-100 dashboard-card dashboard-card-peque">
+                  <div class="card-body">
+                    <i class="bi bi-list-check display-5 mb-2"></i>
+                    <h5 class="card-title">Registros</h5>
+                    <p class="card-text">Tareas y visitas</p>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 
