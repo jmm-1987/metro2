@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% block title %}Crear tarea{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:520px;margin:auto;">
+  <div class="card-header-gradient">
+    <span class="icon"><i class="bi bi-calendar-plus"></i></span> Crear tarea
+  </div>
+  <form method="POST" style="padding:1.2rem 0 0 0;">
+      {{ form.hidden_tag() }}
+      {{ form.cliente_id }}
+      
+      <div class="d-flex align-items-center gap-3 mb-3">
+          <i class="bi bi-person fs-3 text-secondary"></i>
+          <div class="w-100">
+              {{ form.usuario_id.label }}
+              {{ form.usuario_id(class_='form-select') }}
+          </div>
+      </div>
+      
+      <div class="d-flex align-items-center gap-3 mb-3">
+          <i class="bi bi-person fs-3 text-secondary"></i>
+          <div class="w-100 position-relative">
+              <label for="cliente_nombre">{{ form.cliente_nombre.label }}</label>
+              <div class="input-group">
+                  {{ form.cliente_nombre(class_='form-control', autocomplete='off', id='cliente_nombre') }}
+                  <button class="btn btn-outline-success" type="button" id="btn-crear-cliente-rapido" title="Creación rápida de cliente"><i class="bi bi-plus"></i></button>
+              </div>
+              <div id="resultados-cliente" class="list-group position-absolute w-100" style="z-index: 1000;"></div>
+          </div>
+      </div>
+      
+      <hr class="decor-sep">
+      
+      <div class="d-flex gap-3">
+        <div class="d-flex align-items-center gap-3 mb-3 w-50">
+            <i class="bi bi-calendar fs-3 text-secondary"></i>
+            <div class="w-100">
+                {{ form.fecha.label }}
+                {{ form.fecha(class_='form-control') }}
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-3 mb-3 w-50">
+            <i class="bi bi-clock fs-3 text-secondary"></i>
+            <div class="w-100">
+                {{ form.hora.label }}
+                {{ form.hora(class_='form-control') }}
+            </div>
+        </div>
+      </div>
+      
+      <div class="d-flex align-items-center gap-3 mb-3">
+          <i class="bi bi-chat-dots fs-3 text-secondary"></i>
+          <div class="w-100">
+              {{ form.comentario.label }}
+              {{ form.comentario(class_='form-control') }}
+          </div>
+      </div>
+      
+      <div class="d-flex align-items-center gap-3 mb-3">
+          <i class="bi bi-clipboard-check fs-3 text-secondary"></i>
+          <div class="w-100">
+              {{ form.resolucion.label }}
+              {{ form.resolucion(class_='form-control', disabled=true) }}
+          </div>
+      </div>
+      
+      <div class="d-flex align-items-center gap-3 mb-3">
+          <i class="bi bi-flag fs-3 text-secondary"></i>
+          <div class="w-100">
+              {{ form.estado.label }}
+              {{ form.estado(class_='form-select') }}
+          </div>
+      </div>
+      
+      <button type="submit" class="btn btn-success w-100 mt-2">Crear tarea</button>
+  </form>
+</div>
+
+<!-- Modal Creación Rápida Cliente -->
+<div class="modal fade" id="modalCrearClienteRapido" tabindex="-1" aria-labelledby="modalCrearClienteRapidoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCrearClienteRapidoLabel">Creación rápida de cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-crear-cliente-rapido">
+          <div class="mb-3">
+            <label for="nuevo_nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="nuevo_nombre" required>
+          </div>
+          <div class="mb-3">
+            <label for="nuevo_localidad" class="form-label">Localidad <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="nuevo_localidad" required>
+          </div>
+          <div class="mb-3">
+            <label for="nuevo_telefono" class="form-label">Teléfono <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="nuevo_telefono" required>
+          </div>
+          <div id="error-crear-cliente-rapido" class="alert alert-danger d-none"></div>
+          <button type="submit" class="btn btn-success w-100">Crear cliente</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('cliente_nombre');
+    const resultsDiv = document.getElementById('resultados-cliente');
+    const clientIdInput = document.getElementById('cliente_id');
+
+    let debounceTimer;
+    searchInput.addEventListener('keyup', function() {
+        clearTimeout(debounceTimer);
+        const query = searchInput.value;
+
+        if (query.length < 2) {
+            resultsDiv.innerHTML = '';
+            if (query.length === 0) {
+                clientIdInput.value = '';
+            }
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            fetch(`{{ url_for('buscar_clientes') }}?q=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = '';
+                    if (data.length > 0) {
+                        data.forEach(cliente => {
+                            const item = document.createElement('a');
+                            item.href = '#';
+                            item.classList.add('list-group-item', 'list-group-item-action');
+                            item.textContent = cliente.text;
+                            item.dataset.id = cliente.id;
+                            resultsDiv.appendChild(item);
+                        });
+                    } else {
+                        const item = document.createElement('span');
+                        item.classList.add('list-group-item');
+                        item.textContent = 'No se encontraron clientes';
+                        resultsDiv.appendChild(item);
+                    }
+                });
+        }, 300);
+    });
+
+    resultsDiv.addEventListener('click', function(e) {
+        if (e.target && e.target.matches('a.list-group-item-action')) {
+            e.preventDefault();
+            searchInput.value = e.target.textContent;
+            clientIdInput.value = e.target.dataset.id;
+            resultsDiv.innerHTML = '';
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target)) {
+            resultsDiv.innerHTML = '';
+        }
+    });
+
+    // Abrir modal de creación rápida
+    document.getElementById('btn-crear-cliente-rapido').addEventListener('click', function() {
+        document.getElementById('form-crear-cliente-rapido').reset();
+        document.getElementById('error-crear-cliente-rapido').classList.add('d-none');
+        var modal = new bootstrap.Modal(document.getElementById('modalCrearClienteRapido'));
+        modal.show();
+    });
+
+    // Enviar formulario de creación rápida por AJAX
+    document.getElementById('form-crear-cliente-rapido').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const nombre = document.getElementById('nuevo_nombre').value.trim();
+        const localidad = document.getElementById('nuevo_localidad').value.trim();
+        const telefono = document.getElementById('nuevo_telefono').value.trim();
+        const errorDiv = document.getElementById('error-crear-cliente-rapido');
+        errorDiv.classList.add('d-none');
+        errorDiv.textContent = '';
+        fetch('/crear_cliente_rapido', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ nombre, localidad, telefono })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Rellenar el input de cliente y su id
+                document.getElementById('cliente_nombre').value = data.cliente_texto;
+                document.getElementById('cliente_id').value = data.cliente_id;
+                // Cerrar modal
+                bootstrap.Modal.getInstance(document.getElementById('modalCrearClienteRapido')).hide();
+            } else {
+                errorDiv.textContent = data.error || 'Error desconocido al crear cliente';
+                errorDiv.classList.remove('d-none');
+            }
+        })
+        .catch(() => {
+            errorDiv.textContent = 'Error de red al crear cliente';
+            errorDiv.classList.remove('d-none');
+        });
+    });
+});
+</script>
+{% endblock %} 

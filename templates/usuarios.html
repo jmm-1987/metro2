@@ -1,25 +1,49 @@
 {% extends 'base.html' %}
 {% block title %}Usuarios{% endblock %}
 {% block content %}
-<h2>Usuarios</h2>
-<a href="/crear_usuario" class="btn btn-primary mb-3">Crear usuario</a>
-<div class="card-list">
-{% for usuario in usuarios %}
-  <div class="card">
-    <div class="d-flex align-items-center mb-2">
-      <a href="/editar_usuario/{{ usuario.id }}" class="fw-bold text-decoration-none me-2">{{ usuario.nombre }}</a>
-      <a href="/editar_usuario/{{ usuario.id }}" title="Editar usuario" class="text-warning"><i class="bi bi-pencil-square"></i></a>
-      {% if usuario.es_admin %}
-        <span class="badge bg-warning text-dark ms-2">Admin</span>
-      {% endif %}
-    </div>
-    <div class="mb-1"><span class="fw-bold">ID:</span> {{ usuario.id }}</div>
-    <div class="mb-1"><span class="fw-bold">Administrador:</span> {% if usuario.es_admin %}Sí{% else %}No{% endif %}</div>
-    <div class="mb-1"><span class="fw-bold">Email:</span> {{ usuario.email or '-' }}</div>
-    <div class="mb-1"><span class="fw-bold">Teléfono:</span> {{ usuario.telefono or '-' }}</div>
-  </div>
-{% else %}
-  <div class="card"><em>No hay usuarios registrados.</em></div>
-{% endfor %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Usuarios del sistema</h2>
+    <a href="{{ url_for('crear_usuario') }}" class="btn btn-primary">
+        <i class="bi bi-person-plus"></i> Crear usuario
+    </a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Nombre</th>
+                <th>Admin</th>
+                <th>Color</th>
+                <th class="text-end">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario in usuarios %}
+            <tr>
+                <td>{{ usuario.nombre }}</td>
+                <td>
+                    {% if usuario.es_admin %}
+                        <i class="bi bi-check-circle-fill text-success" title="Sí"></i>
+                    {% else %}
+                        <i class="bi bi-x-circle-fill text-secondary" title="No"></i>
+                    {% endif %}
+                </td>
+                <td>
+                    <span style="display: inline-block; width: 25px; height: 25px; border-radius: 50%; background-color: {{ usuario.color or '#f8f9fa' }}; border: 1px solid #dee2e6;"></span>
+                </td>
+                <td class="text-end">
+                    <a href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil-square"></i> Editar
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="text-center"><em>No hay usuarios registrados.</em></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %} 

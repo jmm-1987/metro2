@@ -12,7 +12,6 @@
             <th>Teléfono</th>
             <th>Estado</th>
             <th>Comercial</th>
-            <th>Inmueble</th>
             <th>Localidad</th>
             <th>Interés</th>
             <th>Rango de precios</th>
@@ -35,7 +34,6 @@
             <td>{{ cliente.telefono }}</td>
             <td><span class="badge bg-secondary">{{ cliente.estado.replace('_', ' ').capitalize() }}</span></td>
             <td>{{ cliente.comercial_id if not cliente.comercial_id else (usuarios_dict[cliente.comercial_id] if usuarios_dict and cliente.comercial_id in usuarios_dict else 'Sin asignar') }}</td>
-            <td>{{ cliente.inmueble_id if not cliente.inmueble_id else (inmuebles_dict[cliente.inmueble_id] if inmuebles_dict and cliente.inmueble_id in inmuebles_dict else 'Sin asignar') }}</td>
             <td>{{ cliente.localidad or '-' }}</td>
             <td>
                 {% if cliente.interes %}

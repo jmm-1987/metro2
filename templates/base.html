@@ -6,8 +6,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js'></script>
 </head>
-<body>
+<body class="d-flex flex-column vh-100">
 <nav class="navbar navbar-expand-lg mb-4">
   <div class="container-fluid">
     <a class="navbar-brand d-flex align-items-center" href="/">
@@ -20,23 +21,13 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item mx-1">
+          <a class="nav-link btn btn-outline-success rounded-pill px-3 d-flex align-items-center gap-2" href="/">
+            <i class="bi bi-journal-text"></i> Tareas
+          </a>
+        </li>
+        <li class="nav-item mx-1">
           <a class="nav-link btn btn-outline-primary rounded-pill px-3 d-flex align-items-center gap-2" href="/clientes">
             <i class="bi bi-people"></i> Clientes
-          </a>
-        </li>
-        <li class="nav-item mx-1">
-          <a class="nav-link btn btn-outline-success rounded-pill px-3 d-flex align-items-center gap-2" href="/registros">
-            <i class="bi bi-journal-text"></i> Registros
-          </a>
-        </li>
-        <li class="nav-item mx-1">
-          <a class="nav-link btn btn-outline-warning rounded-pill px-3 d-flex align-items-center gap-2" href="/inmuebles">
-            <i class="bi bi-house"></i> Inmuebles
-          </a>
-        </li>
-        <li class="nav-item mx-1">
-          <a class="nav-link btn btn-outline-info rounded-pill px-3 d-flex align-items-center gap-2" href="/eventos">
-            <i class="bi bi-calendar-event"></i> Eventos
           </a>
         </li>
         <li class="nav-item mx-1">
@@ -71,7 +62,7 @@
     </div>
   </div>
 </nav>
-<div class="container">
+<div class="container flex-grow-1 d-flex flex-column">
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         <div class="alert alert-info">
@@ -84,7 +75,7 @@
     {% block content %}{% endblock %}
 </div>
 
-</style>
-<!-- Fin botón flotante y modal chatbot -->
+<!-- Bootstrap JS para modales y componentes -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html> 

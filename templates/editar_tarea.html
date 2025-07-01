@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Resolver Tarea{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:520px;margin:auto;">
+  <div class="card-header-gradient">
+    <span class="icon"><i class="bi bi-check2-square"></i></span> Resolver Tarea
+  </div>
+  <form method="POST" id="resolver-form" style="padding:1.2rem 0 0 0;">
+      {{ form.hidden_tag() }}
+      {% if form.errors %}
+      <div class="alert alert-danger">
+        <ul>
+        {% for field, errors in form.errors.items() %}
+          {% for error in errors %}
+            <li><b>{{ form[field].label.text }}:</b> {{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {{ form.cliente_id }}
+      
+      <div class="d-flex align-items-center gap-3 mb-3">
+          <i class="bi bi-person fs-3 text-secondary"></i>
+          <div class="w-100">
+              {{ form.usuario_id.label }}
+              {{ form.usuario_id(class_='form-control', disabled=true) }}
+          </div>
+      </div>
+      
+      <div class="d-flex align-items-center gap-3 mb-3">
+          <i class="bi bi-person fs-3 text-secondary"></i>
+          <div class="w-100 position-relative">
+              {{ form.cliente_nombre.label }}
+              {{ form.cliente_nombre(class_='form-control', disabled=true) }}
+          </div>
+      </div>
+      
+      <hr class="decor-sep">
+      
+      <div class="d-flex gap-3">
+        <div class="d-flex align-items-center gap-3 mb-3 w-50">
+            <i class="bi bi-calendar fs-3 text-secondary"></i>
+            <div class="w-100">
+                {{ form.fecha.label }}
+                {{ form.fecha(class_='form-control', disabled=true) }}
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-3 mb-3 w-50">
+            <i class="bi bi-clock fs-3 text-secondary"></i>
+            <div class="w-100">
+                <label>Hora</label>
+                <input class="form-control" value="{{ tarea.hora.strftime('%H:%M') if tarea.hora else '' }}" disabled>
+            </div>
+        </div>
+      </div>
+      
+      <div class="d-flex align-items-center gap-3 mb-3">
+          <i class="bi bi-chat-dots fs-3 text-secondary"></i>
+          <div class="w-100">
+              {{ form.comentario.label }}
+              {{ form.comentario(class_='form-control', disabled=true) }}
+          </div>
+      </div>
+      
+      <div class="d-flex align-items-center gap-3 mb-3">
+          <i class="bi bi-clipboard-check fs-3 text-secondary"></i>
+          <div class="w-100">
+              {{ form.resolucion.label }}
+              {{ form.resolucion(class_='form-control', rows=4) }}
+          </div>
+      </div>
+      
+      <div class="d-flex align-items-center gap-3 mb-3">
+          <i class="bi bi-flag fs-3 text-secondary"></i>
+          <div class="w-100">
+              {{ form.estado.label }}
+              {{ form.estado(class_='form-control', style='display:none;') }}
+          </div>
+      </div>
+      
+      <!-- Botón único de resolver -->
+      <div id="resolver-btns">
+        <button type="button" class="btn btn-primary w-100 mt-2" id="btn-resolver">Resolver</button>
+      </div>
+      <!-- Opciones de resolución, ocultas al principio -->
+      <div id="opciones-resolver" style="display:none;">
+        <div class="d-flex flex-column gap-2 mt-3">
+          <button type="button" class="btn btn-outline-secondary w-100" id="btn-reagendar">Reagendar</button>
+          <button type="submit" class="btn btn-outline-success w-100" name="estado" value="ha_alquilado">Ha alquilado</button>
+          <button type="submit" class="btn btn-outline-info w-100" name="estado" value="ha_comprado">Ha comprado</button>
+          <button type="submit" class="btn btn-outline-danger w-100" name="estado" value="cancelado">Cancelado</button>
+        </div>
+      </div>
+  </form>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const btnResolver = document.getElementById('btn-resolver');
+    const opciones = document.getElementById('opciones-resolver');
+    const resolverBtns = document.getElementById('resolver-btns');
+    const form = document.getElementById('resolver-form');
+    const btnReagendar = document.getElementById('btn-reagendar');
+    btnResolver.addEventListener('click', function() {
+      resolverBtns.style.display = 'none';
+      opciones.style.display = 'block';
+    });
+    btnReagendar.addEventListener('click', function() {
+      form.querySelector('[name=estado]').value = 'reagendada';
+      form.action += '?reagendar=1';
+      form.submit();
+    });
+    // Al enviar con un botón de estado, poner el valor en el select oculto
+    form.addEventListener('submit', function(e) {
+      const estadoBtn = document.activeElement;
+      if (estadoBtn && estadoBtn.name === 'estado') {
+        form.querySelector('[name=estado]').value = estadoBtn.value;
+      }
+    });
+  });
+</script>
+{% endblock %} 

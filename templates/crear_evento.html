@@ -1,32 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}Crear evento{% endblock %}
+{% block title %}Crear tarea{% endblock %}
 {% block content %}
 <div class="card" style="max-width:520px;margin:auto;">
   <div class="card-header-gradient">
-    <span class="icon"><i class="bi bi-calendar-plus"></i></span> Crear evento
+    <span class="icon"><i class="bi bi-calendar-plus"></i></span> Crear tarea
   </div>
   <form method="POST" style="padding:1.2rem 0 0 0;">
       {{ form.hidden_tag() }}
-      <div class="input-icon mb-3">
-          <span class="icon"><i class="bi bi-type"></i></span>
-          {{ form.titulo.label }}
-          {{ form.titulo(class_='form-control') }}
-      </div>
-      <div class="input-icon mb-3">
-          <span class="icon"><i class="bi bi-calendar"></i></span>
-          {{ form.fecha.label }}
-          {{ form.fecha(class_='form-control') }}
-      </div>
-      <div class="input-icon mb-3">
-          <span class="icon"><i class="bi bi-clock"></i></span>
-          {{ form.hora_inicio.label }}
-          {{ form.hora_inicio(class_='form-control', step='900') }}
-      </div>
-      <div class="input-icon mb-3">
-          <span class="icon"><i class="bi bi-clock-history"></i></span>
-          {{ form.hora_fin.label }}
-          {{ form.hora_fin(class_='form-control', step='900') }}
-      </div>
       <div class="input-icon mb-3">
           <span class="icon"><i class="bi bi-person"></i></span>
           {{ form.usuario_id.label }}
@@ -37,12 +17,28 @@
           {{ form.cliente_id.label }}
           {{ form.cliente_id(class_='form-select') }}
       </div>
+      <hr class="decor-sep">
       <div class="input-icon mb-3">
-          <span class="icon"><i class="bi bi-house"></i></span>
-          {{ form.inmueble_id.label }}
-          {{ form.inmueble_id(class_='form-select') }}
+          <span class="icon"><i class="bi bi-calendar"></i></span>
+          {{ form.fecha.label }}
+          {{ form.fecha(class_='form-control') }}
       </div>
-      <button type="submit" class="btn btn-success w-100 mt-2">Crear evento</button>
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-clock"></i></span>
+          {{ form.hora.label }}
+          {{ form.hora(class_='form-control') }}
+      </div>
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-chat-dots"></i></span>
+          {{ form.comentario.label }}
+          {{ form.comentario(class_='form-control') }}
+      </div>
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-clipboard-check"></i></span>
+          {{ form.resolucion.label }}
+          {{ form.resolucion(class_='form-control') }}
+      </div>
+      <button type="submit" class="btn btn-success w-100 mt-2">Crear tarea</button>
   </form>
 </div>
 {% endblock %} 

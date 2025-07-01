@@ -26,43 +26,72 @@
   </style>
   <form method="POST" style="padding:1.2rem 0 0 0;">
       {{ form.hidden_tag() }}
+      {% if form.errors %}
+      <div class="alert alert-danger">
+          <p>Por favor corrige los siguientes errores:</p>
+          <ul>
+              {% for field, errors in form.errors.items() %}
+              <li>{{ form[field].label.text }}: {{ ', '.join(errors) }}</li>
+              {% endfor %}
+          </ul>
+      </div>
+      {% endif %}
       <div class="row mb-3">
         <div class="col-6">
           <span class="icon"><i class="bi bi-person"></i></span>
-          {{ form.nombre.label }}
-          {{ form.nombre(class_='form-control') }}
+          <label for="nombre">{{ form.nombre.label.text }}</label>
+          {{ form.nombre(class_='form-control' + (' is-invalid' if form.nombre.errors else ''), autocomplete='name', id='nombre') }}
+          {% for error in form.nombre.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+          {% endfor %}
         </div>
         <div class="col-6">
           <span class="icon"><i class="bi bi-geo-alt"></i></span>
-          {{ form.localidad.label }}
-          {{ form.localidad(class_='form-control') }}
+          <label for="localidad">{{ form.localidad.label.text }}</label>
+          {{ form.localidad(class_='form-control' + (' is-invalid' if form.localidad.errors else ''), autocomplete='address-level2', id='localidad') }}
+          {% for error in form.localidad.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+          {% endfor %}
         </div>
       </div>
       <div class="row mb-3">
         <div class="col-4">
           <span class="icon"><i class="bi bi-envelope"></i></span>
-          {{ form.email.label }}
-          {{ form.email(class_='form-control') }}
+          <label for="email">{{ form.email.label.text }}</label>
+          {{ form.email(class_='form-control', autocomplete='email', id='email') }}
         </div>
         <div class="col-4">
           <span class="icon"><i class="bi bi-telephone"></i></span>
-          {{ form.telefono.label }}
-          {{ form.telefono(class_='form-control') }}
+          <label for="telefono">{{ form.telefono.label.text }}</label>
+          {{ form.telefono(class_='form-control' + (' is-invalid' if form.telefono.errors else ''), autocomplete='tel', id='telefono') }}
+          {% for error in form.telefono.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+          {% endfor %}
         </div>
         <div class="col-4">
-          {{ form.fecha_creacion.label }}
-          {{ form.fecha_creacion(class_='form-control', readonly=true) }}
+          <label for="fecha_creacion">{{ form.fecha_creacion.label.text }}</label>
+          {{ form.fecha_creacion(class_='form-control', readonly=true, autocomplete='off', id='fecha_creacion') }}
         </div>
       </div>
       <hr class="decor-sep">
       <div class="row mb-3">
-        <div class="col-6">
+        <div class="col-4">
+          <div class="input-icon">
+            <span class="icon"><i class="bi bi-currency-dollar"></i></span>
+            {{ form.precio_min.label }}
+            {{ form.precio_min(class_='form-control form-control-sm', step='1') }}
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="input-icon">
+            <span class="icon"><i class="bi bi-currency-dollar"></i></span>
+            {{ form.precio_max.label }}
+            {{ form.precio_max(class_='form-control form-control-sm', step='1') }}
+          </div>
+        </div>
+        <div class="col-4">
           {{ form.comercial_id.label }}
           {{ form.comercial_id(class_='form-select') }}
-        </div>
-        <div class="col-6">
-          {{ form.inmueble_id.label }}
-          {{ form.inmueble_id(class_='form-select') }}
         </div>
       </div>
       <div class="row mb-3">
@@ -81,41 +110,15 @@
           </div>
         </div>
         <div class="col-md-4">
-          {{ form.temperatura.label }}<br>
-          <div id="temperatura-puntos" style="display:flex;gap:8px;">
-            {% for subfield in form.temperatura %}
-              {% if subfield.data == 1 %}
-                {% set color = '#e0e0e0' %}
-              {% elif subfield.data == 2 %}
-                {% set color = '#b3e5fc' %}
-              {% elif subfield.data == 3 %}
-                {% set color = '#ffe082' %}
-              {% elif subfield.data == 4 %}
-                {% set color = '#ffb74d' %}
-              {% elif subfield.data == 5 %}
-                {% set color = '#e57373' %}
-              {% endif %}
-              <label style="cursor:pointer;display:inline-block;">
-                {{ subfield(class_='radio-color') }}
-                <span class="color-dot" style="background:{{ color }};"></span>
-              </label>
+          {{ form.zonas.label }}<br>
+          <div class="row">
+            {% for subfield in form.zonas %}
+              <div class="col-6">
+                <label style="font-weight:normal;">
+                  {{ subfield() }} {{ subfield.label.text }}
+                </label>
+              </div>
             {% endfor %}
-          </div>
-        </div>
-      </div>
-      <div class="row mb-3">
-        <div class="col-6">
-          <div class="input-icon">
-            <span class="icon"><i class="bi bi-currency-dollar"></i></span>
-            {{ form.precio_min.label }}
-            {{ form.precio_min(class_='form-control form-control-sm', step='1') }}
-          </div>
-        </div>
-        <div class="col-6">
-          <div class="input-icon">
-            <span class="icon"><i class="bi bi-currency-dollar"></i></span>
-            {{ form.precio_max.label }}
-            {{ form.precio_max(class_='form-control form-control-sm', step='1') }}
           </div>
         </div>
       </div>

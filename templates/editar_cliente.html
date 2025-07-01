@@ -30,32 +30,54 @@
         </div>
         <form method="POST" style="padding:1.2rem 0 0 0;">
             {{ form.hidden_tag() }}
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <p>Por favor corrige los siguientes errores:</p>
+                <ul>
+                    {% for field, errors in form.errors.items() %}
+                    <li>{{ form[field].label.text }}: {{ ', '.join(errors) }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
             <div class="row mb-3">
               <div class="col-6">
                 <span class="icon"><i class="bi bi-person"></i></span>
-                {{ form.nombre.label }}
-                {{ form.nombre(class_='form-control') }}
+                <label for="nombre">{{ form.nombre.label.text }}</label>
+                {{ form.nombre(class_='form-control' + (' is-invalid' if form.nombre.errors else ''), autocomplete='name', id='nombre') }}
+                {% for error in form.nombre.errors %}
+                  <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
               </div>
               <div class="col-6">
                 <span class="icon"><i class="bi bi-geo-alt"></i></span>
-                {{ form.localidad.label }}
-                {{ form.localidad(class_='form-control') }}
+                <label for="localidad">{{ form.localidad.label.text }}</label>
+                {{ form.localidad(class_='form-control' + (' is-invalid' if form.localidad.errors else ''), autocomplete='address-level2', id='localidad') }}
+                {% for error in form.localidad.errors %}
+                  <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
               </div>
             </div>
             <div class="row mb-3">
               <div class="col-4">
                 <span class="icon"><i class="bi bi-envelope"></i></span>
-                {{ form.email.label }}
-                {{ form.email(class_='form-control') }}
+                <label for="email">{{ form.email.label.text }}</label>
+                {{ form.email(class_='form-control' + (' is-invalid' if form.email.errors else ''), autocomplete='email', id='email') }}
+                {% for error in form.email.errors %}
+                  <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
               </div>
               <div class="col-4">
                 <span class="icon"><i class="bi bi-telephone"></i></span>
-                {{ form.telefono.label }}
-                {{ form.telefono(class_='form-control') }}
+                <label for="telefono">{{ form.telefono.label.text }}</label>
+                {{ form.telefono(class_='form-control' + (' is-invalid' if form.telefono.errors else ''), autocomplete='tel', id='telefono') }}
+                {% for error in form.telefono.errors %}
+                  <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
               </div>
               <div class="col-4">
-                {{ form.fecha_creacion.label }}
-                {{ form.fecha_creacion(class_='form-control', readonly=true) }}
+                <label for="fecha_creacion">{{ form.fecha_creacion.label.text }}</label>
+                {{ form.fecha_creacion(class_='form-control', readonly=true, autocomplete='off', id='fecha_creacion') }}
               </div>
             </div>
             <hr class="decor-sep">
@@ -63,10 +85,6 @@
               <div class="col-6">
                 {{ form.comercial_id.label }}
                 {{ form.comercial_id(class_='form-select') }}
-              </div>
-              <div class="col-6">
-                {{ form.inmueble_id.label }}
-                {{ form.inmueble_id(class_='form-select') }}
               </div>
             </div>
             <div class="row mb-3">
@@ -85,23 +103,11 @@
                 </div>
               </div>
               <div class="col-md-4">
-                {{ form.temperatura.label }}<br>
-                <div id="temperatura-puntos" style="display:flex;gap:8px;">
-                  {% for subfield in form.temperatura %}
-                    {% if subfield.data == 1 %}
-                      {% set color = '#e0e0e0' %}
-                    {% elif subfield.data == 2 %}
-                      {% set color = '#b3e5fc' %}
-                    {% elif subfield.data == 3 %}
-                      {% set color = '#ffe082' %}
-                    {% elif subfield.data == 4 %}
-                      {% set color = '#ffb74d' %}
-                    {% elif subfield.data == 5 %}
-                      {% set color = '#e57373' %}
-                    {% endif %}
-                    <label style="cursor:pointer;display:inline-block;">
-                      {{ subfield(class_='radio-color') }}
-                      <span class="color-dot" style="background:{{ color }};"></span>
+                {{ form.zonas.label }}<br>
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  {% for subfield in form.zonas %}
+                    <label style="font-weight:normal;">
+                      {{ subfield() }} {{ subfield.label.text }}
                     </label>
                   {% endfor %}
                 </div>
@@ -134,27 +140,6 @@
     </div>
     <!-- Columna derecha: Tarjetas -->
     <div class="col-md-5">
-      <!-- Inmuebles de interés -->
-      <div class="card mb-3">
-        <div class="card-header bg-primary text-white">
-          <i class="bi bi-house"></i> Inmuebles de interés
-        </div>
-        <div class="card-body" style="max-height:250px;overflow:auto;">
-          {% if inmuebles_interes %}
-            <ul class="list-group list-group-flush">
-              {% for inmueble in inmuebles_interes %}
-                <li class="list-group-item">
-                  <strong>{{ inmueble.direccion }}</strong><br>
-                  {{ inmueble.categoria }}<br>
-                  Precio: {{ inmueble.precio_min }} - {{ inmueble.precio_max }} €
-                </li>
-              {% endfor %}
-            </ul>
-          {% else %}
-            <div class="text-muted">No hay inmuebles que coincidan con el interés del cliente.</div>
-          {% endif %}
-        </div>
-      </div>
       <!-- Actividad del cliente -->
       <div class="card">
         <div class="card-header bg-info text-white">
@@ -163,13 +148,10 @@
         <div class="card-body" style="max-height:250px;overflow:auto;">
           {% if registros_cliente %}
             <ul class="list-group list-group-flush">
-              {% for registro, inmueble in registros_cliente %}
+              {% for registro in registros_cliente %}
                 <li class="list-group-item d-flex justify-content-between align-items-start">
                   <div>
                     <strong>{{ registro.fecha.strftime('%d/%m/%Y') }}</strong>: {{ registro.comentario }}
-                    {% if inmueble %}
-                      <br><span class="text-muted" style="font-size:0.95em;">Inmueble: {{ inmueble.direccion }}</span>
-                    {% endif %}
                   </div>
                   <a href="{{ url_for('editar_registro', registro_id=registro.id) }}" class="ms-2" title="Editar registro"><i class="bi bi-pencil-square"></i></a>
                 </li>

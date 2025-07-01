@@ -1,93 +1,240 @@
 {% extends 'base.html' %}
 {% block title %}Inicio{% endblock %}
 {% block content %}
-<div class="row justify-content-center mt-4">
-  <div class="col-12 col-lg-11">
-    <div class="row g-4">
-      <!-- Tarjeta grande: Eventos próximos -->
-      <div class="col-lg-8">
-        <div class="card shadow h-100 dashboard-card dashboard-card-big p-0 position-relative calendar-style">
-          <a href="{{ url_for('calendario') }}" class="position-absolute top-0 end-0 m-3 text-secondary" title="Ver calendario" style="font-size:1.7em;"><i class="bi bi-calendar3"></i></a>
-          <div class="calendar-header p-3 d-flex align-items-center justify-content-between">
-            <span class="fw-bold"><i class="bi bi-calendar-event me-2"></i>Próximos eventos</span>
-            <!--<span class="text-muted">{{ now.strftime('%B %Y') }}</span>-->
-          </div>
-          <div class="card-body pt-0">
-            {% if eventos_proximos %}
-              <ul class="list-group list-group-flush">
-                {% set dias = {'Mon':'Lun', 'Tue':'Mar', 'Wed':'Mié', 'Thu':'Jue', 'Fri':'Vie', 'Sat':'Sáb', 'Sun':'Dom'} %}
-                {% for evento in eventos_proximos %}
-                <li class="list-group-item d-flex align-items-center justify-content-between">
-                  <div>
-                    <span class="fw-bold">
-                      {{ dias[evento.fecha.strftime('%a')] }} {{ evento.fecha.strftime('%d/%m/%Y') }}
-                      {% if evento.hora_inicio %} {{ evento.hora_inicio.strftime('%H:%M') }}{% endif %}
-                      {% if evento.hora_fin %} - {{ evento.hora_fin.strftime('%H:%M') }}{% endif %}
-                    </span> — {{ evento.titulo }}
-                  </div>
-                  <span class="badge bg-primary">Comercial: {{ evento.usuario.nombre }}</span>
-                </li>
-                {% endfor %}
-              </ul>
-            {% else %}
-              <div class="text-muted">No hay eventos próximos.</div>
-            {% endif %}
-            <a href="{{ url_for('crear_evento') }}" class="btn btn-success fab-inside-card" title="Crear evento"><i class="bi bi-plus-lg"></i></a>
-            <div class="text-end mt-3">
-              <a href="{{ url_for('eventos') }}" class="btn btn-outline-primary btn-sm">Ver todos los eventos</a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Tarjeta de clientes con totales por temperatura -->
-      <div class="col-lg-4">
-        <div class="dashboard-col-tall">
-          <div class="dashboard-col-tall-inner">
-            <div class="col-12">
-              <a href="{{ url_for('clientes') }}" class="text-decoration-none">
-                <div class="card shadow h-100 dashboard-card dashboard-card-clientes position-relative">
-                  <div class="card-body pb-0 px-2">
-                    <div class="clientes-scroll-list mb-1">
-                      {% for cliente in clientes_list %}
-                        <a href="/editar_cliente/{{ cliente.id }}" class="d-block text-decoration-none text-dark">
-                          <div class="cliente-row cliente-temp-{{ cliente.temperatura }} d-flex align-items-center px-2 py-1 mb-1 rounded" style="font-size:1em;min-height:32px;">
-                            <span class="fw-bold flex-grow-1 text-truncate">{{ cliente.nombre }}</span>
-                          </div>
-                        </a>
-                      {% else %}
-                        <div class="text-muted">No hay clientes.</div>
-                      {% endfor %}
-                    </div>
-                  </div>
-                </div>
-              </a>
-            </div>
-            <div class="col-12">
-              <a href="{{ url_for('respuestas_formulario') }}" class="text-decoration-none">
-                <div class="card text-center shadow h-100 dashboard-card dashboard-card-peque">
-                  <div class="card-body">
-                    <i class="bi bi-whatsapp display-5 mb-2"></i>
-                    <h5 class="card-title">Encuesta satisfacción</h5>
-                    <p class="card-text">Enviar encuesta por WhatsApp</p>
-                  </div>
-                </div>
-              </a>
-            </div>
-            <div class="col-12">
-              <a href="{{ url_for('registros') }}" class="text-decoration-none">
-                <div class="card text-center shadow h-100 dashboard-card dashboard-card-peque">
-                  <div class="card-body">
-                    <i class="bi bi-list-check display-5 mb-2"></i>
-                    <h5 class="card-title">Registros</h5>
-                    <p class="card-text">Tareas y visitas</p>
-                  </div>
-                </div>
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+<div class="card shadow p-4 flex-grow-1">
+  <div class="d-flex justify-content-end mb-2">
+    <button id="toggle-resueltas" class="btn btn-outline-secondary btn-sm">Ver resueltas</button>
+    <a href="{{ url_for('crear_tarea') }}" class="btn btn-primary btn-sm ms-2"><i class="bi bi-plus"></i> Crear tarea</a>
   </div>
+  <div id='calendar' class="h-100"></div>
 </div>
+
+<script>
+  // Variable global para saber si el usuario es admin
+  window.esAdmin = {{ es_admin|tojson }};
+</script>
+<script>
+  let mostrarResueltas = false;
+  let calendar;
+  document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    calendar = new FullCalendar.Calendar(calendarEl, {
+      locale: 'es',
+      firstDay: 1,
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,dayGridWeek,listDay,crearTareaButton'
+      },
+      customButtons: {
+        crearTareaButton: {
+          text: '+',
+          click: function() {
+            window.location.href = "{{ url_for('crear_tarea') }}";
+          }
+        }
+      },
+      buttonText: {
+        today:    'Hoy',
+        month:    'Mes',
+        week:     'Semana',
+        day:      'Día'
+      },
+      views: {
+        listDay: {
+          type: 'list',
+          duration: { days: 1 },
+          buttonText: 'Día',
+          noEventsText: 'No hay eventos para este día.',
+          listDayFormat: { hour: '2-digit', minute: '2-digit', meridiem: false }
+        }
+      },
+      initialView: 'listDay',
+      events: function(fetchInfo, successCallback, failureCallback) {
+        let url = '/api/events?start=' + fetchInfo.startStr + '&end=' + fetchInfo.endStr;
+        if (mostrarResueltas) {
+          url += '&mostrar_resueltas=1';
+        }
+        fetch(url)
+          .then(response => response.json())
+          .then(data => successCallback(data))
+          .catch(error => failureCallback(error));
+      },
+      height: '100%',
+      eventContent: function(arg) {
+        // Tooltip personalizado para mes y semana
+        if (arg.view.type === 'dayGridWeek' || arg.view.type === 'dayGridMonth') {
+          let hora = '';
+          if (arg.event.start && (arg.event.start.getHours() + arg.event.start.getMinutes() > 0)) {
+            hora = arg.event.start.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
+          }
+          let fecha = arg.event.start ? arg.event.start.toLocaleDateString('es-ES') : '';
+          let comercial = arg.event.extendedProps.comercial || '';
+          let cliente = arg.event.extendedProps.cliente || '';
+          let comentario = arg.event.title || '';
+          let tooltip = `Hora: ${hora}\nFecha: ${fecha}\nComercial: ${comercial}\nCliente: ${cliente}\nTarea: ${comentario}`;
+          let title = (hora ? hora + ' - ' : '') + comentario;
+          let div = document.createElement('div');
+          div.innerHTML = title;
+          div.style.backgroundColor = arg.event.backgroundColor || '#fff';
+          div.style.border = '1.5px solid ' + (arg.event.borderColor || '#dee2e6');
+          div.style.color = '#222';
+          div.style.fontSize = '0.98em';
+          div.style.borderRadius = '7px';
+          div.style.padding = '2px 6px';
+          div.style.margin = '1px 0';
+          div.style.overflow = 'hidden';
+          div.style.whiteSpace = 'nowrap';
+          div.style.textOverflow = 'ellipsis';
+          div.style.maxWidth = '100%';
+          div.title = tooltip;
+          return { domNodes: [div] };
+        }
+        if (arg.view.type === 'listDay') {
+          if (arg.event.extendedProps.isHeader) {
+            return {
+              html: `
+                <div class="d-flex align-items-center w-100 fw-bold mb-2" style="background: #f8f9fa; border-bottom: 2px solid #adb5bd; min-height: 40px;">
+                  <div style="width: 140px; text-align:center;">Comercial</div>
+                  <div style="width: 180px; text-align:center;">Cliente</div>
+                  <div class="flex-grow-1" style="text-align:center;">Tarea</div>
+                  <div style="width: 100px; text-align:center;">Acciones</div>
+                  <div style="width: 120px; text-align:center;">Estado</div>
+                </div>
+              `
+            };
+          }
+          // Eliminado el separador de resueltas
+          // if (arg.event.extendedProps.isSeparator) {
+          //   return {
+          //     html: `<div class='w-100 my-4 py-3 text-center bg-secondary bg-opacity-10 border-top border-bottom fw-bold' style='font-size:1.2em; letter-spacing:1px; color:#495057;'>Resueltas</div>`
+          //   };
+          // }
+
+          // Colores de fondo y estado
+          let bgColor = '#fff';
+          let estado = arg.event.extendedProps.estado || '';
+          let estadoColor = '#6c757d';
+          let estadoBadge = '';
+          if (estado === 'Por hacer') {
+            bgColor = '#fff';
+            estadoColor = '#6c757d';
+            estadoBadge = `<span class='badge bg-secondary'>Por hacer</span>`;
+          } else if (estado === 'Ha comprado') {
+            bgColor = '#e6f4ea';
+            estadoColor = '#198754';
+            estadoBadge = `<span class='badge bg-success'>Ha comprado</span>`;
+          } else if (estado === 'Ha alquilado') {
+            bgColor = '#e7f1fa';
+            estadoColor = '#0d6efd';
+            estadoBadge = `<span class='badge bg-primary'>Ha alquilado</span>`;
+          } else if (estado === 'Cancelado') {
+            bgColor = '#f8d7da';
+            estadoColor = '#dc3545';
+            estadoBadge = `<span class='badge bg-danger'>Cancelado</span>`;
+          } else if (estado === 'Reagendada' || estado === 'reagendada') {
+            bgColor = '#fffbe6';
+            estadoColor = '#bfa134';
+            estadoBadge = `<span class='badge bg-warning text-dark'>Reagendada</span>`;
+          }
+
+          // WhatsApp icono y enlace
+          let cliente = arg.event.extendedProps.cliente || '';
+          let clienteHtml = cliente;
+          let telefono = arg.event.extendedProps.telefono || '';
+          let whatsappBtn = '';
+          if (telefono) {
+            let telClean = telefono.replace(/[^\d]/g, '');
+            whatsappBtn = `<a href='https://wa.me/${telClean}' target='_blank' title='Enviar WhatsApp' class='btn btn-outline-success btn-sm' style='margin-left:2px;'><i class='bi bi-whatsapp'></i></a>`;
+          }
+
+          let eventHtml = `
+            <div class="d-flex align-items-center w-100" style="min-height: 40px; background:${bgColor}; border-bottom:1px solid #dee2e6;">
+              <div style="width: 140px; text-align:center;">${arg.event.extendedProps.comercial || ''}</div>
+              <div style="width: 180px; text-align:center;">${clienteHtml}</div>
+              <div class="flex-grow-1" style="text-align:center;">${arg.event.title}</div>
+              <div style="width: 100px; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+                <a href="${arg.event.url}" class="btn btn-outline-primary btn-sm" title="Resolver">
+                  <i class="bi bi-pencil-square"></i>
+                </a>
+                ${whatsappBtn}
+                ${window.esAdmin ? `<button class='btn btn-outline-danger btn-sm btn-eliminar-tarea' data-tarea-id='${arg.event.id}' title='Eliminar'><i class='bi bi-trash'></i></button>` : ''}
+              </div>
+              <div style="width: 120px; text-align:center; color:${estadoColor};">${estadoBadge}</div>
+            </div>
+          `;
+          return { html: eventHtml };
+        }
+        let eventNode = document.createElement('div');
+        eventNode.innerHTML = `<b>${arg.timeText}</b> ${arg.event.title}`;
+        eventNode.style.backgroundColor = arg.event.backgroundColor;
+        eventNode.style.borderColor = arg.event.borderColor;
+        eventNode.style.color = '#000';
+        eventNode.classList.add('fc-event-main');
+
+        return { domNodes: [eventNode] };
+      },
+      datesSet: function(info) {
+        setTimeout(function() {
+          // Eliminar encabezados previos
+          document.querySelectorAll('.fc-encabezado-tareas').forEach(e => e.remove());
+          // Buscar el contenedor de la lista diaria
+          let dayHeader = document.querySelector('.fc-list-day > .fc-list-day-cushion');
+          if (dayHeader) {
+            let encabezado = document.createElement('div');
+            encabezado.className = 'fc-encabezado-tareas d-flex align-items-center w-100 fw-bold mb-2';
+            encabezado.innerHTML = `
+              <div style="width: 150px;">Comercial</div>
+              <div style="width: 200px;">Cliente</div>
+              <div class="flex-grow-1">Tarea</div>
+              <div style="width: 80px;">Acciones</div>
+            `;
+            // Insertar después del título de la fecha
+            dayHeader.parentNode.insertBefore(encabezado, dayHeader.nextSibling);
+          }
+        }, 0);
+      }
+    });
+    calendar.render();
+
+    document.getElementById('toggle-resueltas').addEventListener('click', function() {
+      mostrarResueltas = !mostrarResueltas;
+      this.textContent = mostrarResueltas ? 'Ocultar resueltas' : 'Ver resueltas';
+      calendar.refetchEvents();
+    });
+
+    // Manejar eliminación de tareas
+    document.getElementById('calendar').addEventListener('click', function(e) {
+      if (e.target.closest('.btn-eliminar-tarea')) {
+        e.preventDefault();
+        const btn = e.target.closest('.btn-eliminar-tarea');
+        const tareaId = btn.getAttribute('data-tarea-id');
+        if (confirm('¿Seguro que quieres eliminar esta tarea?')) {
+          fetch(`/eliminar_tarea/${tareaId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              calendar.refetchEvents();
+            } else {
+              alert('Error al eliminar la tarea: ' + (data.error || 'Desconocido'));
+            }
+          })
+          .catch(() => alert('Error de red al eliminar la tarea.'));
+        }
+      }
+    });
+  });
+</script>
+<style>
+/* Ocultar la columna de horas en la vista semanal */
+.fc-timegrid-axis, .fc-timegrid-axis-frame { display: none !important; }
+.fc .fc-timegrid-slot-label { display: none !important; }
+.fc .fc-timegrid-col-frame { border-left: 1px solid #eee; }
+</style>
 {% endblock %} 

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Crear registro{% endblock %}
+{% block title %}Crear tarea{% endblock %}
 {% block content %}
 <div class="card" style="max-width:520px;margin:auto;">
   <div class="card-header-gradient">
@@ -17,11 +17,6 @@
           {{ form.cliente_id.label }}
           {{ form.cliente_id(class_='form-select') }}
       </div>
-      <div class="input-icon mb-3">
-          <span class="icon"><i class="bi bi-house"></i></span>
-          {{ form.inmueble_id.label }}
-          {{ form.inmueble_id(class_='form-select') }}
-      </div>
       <hr class="decor-sep">
       <div class="input-icon mb-3">
           <span class="icon"><i class="bi bi-calendar"></i></span>
@@ -29,9 +24,19 @@
           {{ form.fecha(class_='form-control') }}
       </div>
       <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-clock"></i></span>
+          {{ form.hora.label }}
+          {{ form.hora(class_='form-control') }}
+      </div>
+      <div class="input-icon mb-3">
           <span class="icon"><i class="bi bi-chat-dots"></i></span>
           {{ form.comentario.label }}
           {{ form.comentario(class_='form-control') }}
+      </div>
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-clipboard-check"></i></span>
+          {{ form.resolucion.label }}
+          {{ form.resolucion(class_='form-control') }}
       </div>
       <button type="submit" class="btn btn-success w-100 mt-2">Crear registro</button>
   </form>

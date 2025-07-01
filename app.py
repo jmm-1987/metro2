@@ -1,21 +1,24 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, jsonify
+from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import joinedload
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
+from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import LoginForm, CrearUsuarioForm, CrearClienteForm, CrearInmuebleForm, CrearRegistroForm, CrearEventoForm
+from forms import LoginForm, CrearUsuarioForm, CrearClienteForm, CrearTareaForm, CrearEventoForm, ResolverTareaForm
 from wtforms import StringField, DateField, SelectField
 from flask_wtf import FlaskForm
 from wtforms.validators import DataRequired
 import datetime
 import smtplib
 from email.message import EmailMessage
+from models import db, Usuario, Cliente, Tarea, Evento, RespuestaFormulario
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'cambia_esto_por_un_valor_seguro'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-from models import db, Usuario, Cliente, Registro, Evento, Inmueble, RespuestaFormulario
+from models import db, Usuario, Cliente, Tarea, Evento
 db.init_app(app)
 
 login_manager = LoginManager(app)
@@ -28,11 +31,17 @@ def load_user(user_id):
 @app.route('/')
 @login_required
 def dashboard():
-    eventos_proximos = Evento.query.filter(Evento.fecha >= datetime.date.today()).order_by(Evento.fecha.asc()).limit(5).all()
-    temp_totales = {i: Cliente.query.filter_by(temperatura=i).count() for i in range(1, 6)}
-    clientes_list = Cliente.query.filter_by(estado='en_curso').order_by(Cliente.temperatura.desc(), Cliente.nombre.asc()).limit(15).all()
+    tareas = Tarea.query.options(
+        joinedload(Tarea.usuario),
+        joinedload(Tarea.cliente)
+    ).order_by(Tarea.fecha.asc(), Tarea.hora.asc()).all()
+
+    tareas_por_hacer = [t for t in tareas if t.estado == 'por_hacer']
+    tareas_resueltas = [t for t in tareas if t.estado in ['ha_comprado', 'ha_alquilado', 'cancelado', 'reagendada']]
+
+    clientes_list = Cliente.query.filter_by(estado='en_curso').order_by(Cliente.nombre.asc()).limit(15).all()
     now = datetime.datetime.now()
-    return render_template('dashboard.html', eventos_proximos=eventos_proximos, temp_totales=temp_totales, clientes_list=clientes_list, now=now)
+    return render_template('dashboard.html', tareas_por_hacer=tareas_por_hacer, tareas_resueltas=tareas_resueltas, clientes_list=clientes_list, now=now, es_admin=current_user.es_admin)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -51,20 +60,31 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+@app.route('/buscar_clientes')
+@login_required
+def buscar_clientes():
+    search = request.args.get('q')
+    if search:
+        clientes = Cliente.query.filter(
+            or_(
+                Cliente.nombre.like(f'%{search}%'),
+                Cliente.telefono.like(f'%{search}%')
+            )
+        ).all()
+    else:
+        clientes = []
+    return jsonify([{'id': c.id, 'text': f'{c.nombre} ({c.telefono})'} for c in clientes])
+
 @app.route('/clientes')
 @login_required
 def clientes():
     estado = request.args.get('estado')
-    temperatura = request.args.get('temperatura')
     query = Cliente.query
     if estado:
         query = query.filter_by(estado=estado)
-    if temperatura:
-        query = query.filter_by(temperatura=int(temperatura))
     clientes = query.all()
     usuarios_dict = {u.id: u.nombre for u in Usuario.query.all()}
-    inmuebles_dict = {i.id: i.direccion for i in Inmueble.query.all()}
-    return render_template('clientes.html', clientes=clientes, usuarios_dict=usuarios_dict, inmuebles_dict=inmuebles_dict)
+    return render_template('clientes.html', clientes=clientes, usuarios_dict=usuarios_dict)
 
 @app.route('/usuarios')
 @login_required
@@ -80,22 +100,23 @@ def usuarios():
 def crear_cliente():
     form = CrearClienteForm()
     form.comercial_id.choices = [(0, 'Sin comercial')] + [(u.id, u.nombre) for u in Usuario.query.all()]
-    form.inmueble_id.choices = [(0, 'Sin inmueble')] + [(i.id, i.direccion) for i in Inmueble.query.all()]
+    if request.method == 'GET' and not form.fecha_creacion.data:
+        form.fecha_creacion.data = datetime.date.today()
     if form.validate_on_submit():
         cliente = Cliente(
             nombre=form.nombre.data,
-            email=form.email.data,
+            email=form.email.data or None,
             telefono=form.telefono.data,
             localidad=form.localidad.data,
-            observaciones=form.observaciones.data,
-            tipo_cliente=form.tipo_cliente.data,
-            interes=','.join(form.interes.data),
-            precio_min=form.precio_min.data,
-            precio_max=form.precio_max.data,
-            temperatura=form.temperatura.data,
+            observaciones=form.observaciones.data or None,
+            tipo_cliente=form.tipo_cliente.data or None,
+            interes=','.join(form.interes.data) if form.interes.data else None,
+            zonas=','.join(form.zonas.data) if form.zonas.data else None,
+            precio_min=form.precio_min.data if form.precio_min.data else None,
+            precio_max=form.precio_max.data if form.precio_max.data else None,
             estado=form.estado.data,
             comercial_id=form.comercial_id.data if form.comercial_id.data != 0 else None,
-            inmueble_id=form.inmueble_id.data if form.inmueble_id.data != 0 else None
+            fecha_creacion=form.fecha_creacion.data or datetime.date.today()
         )
         db.session.add(cliente)
         try:
@@ -113,21 +134,19 @@ def editar_cliente(cliente_id):
     cliente = Cliente.query.get_or_404(cliente_id)
     form = CrearClienteForm(obj=cliente)
     form.comercial_id.choices = [(0, 'Sin comercial')] + [(u.id, u.nombre) for u in Usuario.query.all()]
-    form.inmueble_id.choices = [(0, 'Sin inmueble')] + [(i.id, i.direccion) for i in Inmueble.query.all()]
     if request.method == 'POST' and form.validate_on_submit():
         cliente.nombre = form.nombre.data
-        cliente.email = form.email.data
+        cliente.email = form.email.data or None
         cliente.telefono = form.telefono.data
         cliente.localidad = form.localidad.data
-        cliente.observaciones = form.observaciones.data
-        cliente.tipo_cliente = form.tipo_cliente.data
-        cliente.interes = ','.join(form.interes.data)
-        cliente.precio_min = form.precio_min.data
-        cliente.precio_max = form.precio_max.data
-        cliente.temperatura = form.temperatura.data
+        cliente.observaciones = form.observaciones.data or None
+        cliente.tipo_cliente = form.tipo_cliente.data or None
+        cliente.interes = ','.join(form.interes.data) if form.interes.data else None
+        cliente.zonas = ','.join(form.zonas.data) if form.zonas.data else None
+        cliente.precio_min = form.precio_min.data if form.precio_min.data else None
+        cliente.precio_max = form.precio_max.data if form.precio_max.data else None
         cliente.estado = form.estado.data
         cliente.comercial_id = form.comercial_id.data if form.comercial_id.data != 0 else None
-        cliente.inmueble_id = form.inmueble_id.data if form.inmueble_id.data != 0 else None
         try:
             db.session.commit()
             flash('Cliente actualizado correctamente')
@@ -135,23 +154,11 @@ def editar_cliente(cliente_id):
         except Exception as e:
             db.session.rollback()
             flash('Error al actualizar cliente: {}'.format(str(e)))
-    
     if request.method == 'GET':
         form.comercial_id.data = cliente.comercial_id or 0
-        form.inmueble_id.data = cliente.inmueble_id or 0
         form.interes.data = cliente.interes.split(',') if cliente.interes else []
-
-    # INMUEBLES DE INTERÉS: por rango de precio y tipo
-    inmuebles_interes = Inmueble.query.filter(
-        Inmueble.precio_min >= (cliente.precio_min or 0),
-        Inmueble.precio_max <= (cliente.precio_max or 99999999),
-        Inmueble.categoria == cliente.tipo_cliente
-    ).all()
-
-    # ACTIVIDAD DEL CLIENTE: registros donde esté implicado
-    registros_cliente = Registro.query.outerjoin(Inmueble, Registro.inmueble_id == Inmueble.id).add_entity(Inmueble).filter(Registro.cliente_id == cliente.id).order_by(Registro.fecha.desc()).all()
-
-    return render_template('editar_cliente.html', form=form, cliente=cliente, inmuebles_interes=inmuebles_interes, registros_cliente=registros_cliente)
+        form.zonas.data = cliente.zonas.split(',') if cliente.zonas else []
+    return render_template('editar_cliente.html', form=form, cliente=cliente)
 
 @app.route('/crear_usuario', methods=['GET', 'POST'])
 @login_required
@@ -162,7 +169,7 @@ def crear_usuario():
     form = CrearUsuarioForm()
     if form.validate_on_submit():
         hashed_password = generate_password_hash(form.password.data)
-        usuario = Usuario(nombre=form.nombre.data, password=hashed_password, es_admin=form.es_admin.data)
+        usuario = Usuario(nombre=form.nombre.data, password=hashed_password, es_admin=form.es_admin.data, color=form.color.data)
         db.session.add(usuario)
         try:
             db.session.commit()
@@ -184,6 +191,7 @@ def editar_usuario(usuario_id):
     if form.validate_on_submit():
         usuario.nombre = form.nombre.data
         usuario.es_admin = form.es_admin.data
+        usuario.color = form.color.data
         if form.password.data:
             usuario.password = generate_password_hash(form.password.data)
         try:
@@ -198,120 +206,8 @@ def editar_usuario(usuario_id):
 @app.route('/registros')
 @login_required
 def registros():
-    registros = Registro.query.outerjoin(Inmueble, Registro.inmueble_id == Inmueble.id).add_entity(Inmueble).all()
+    registros = Tarea.query.all()
     return render_template('registros.html', registros=registros)
-
-@app.route('/inmuebles')
-@login_required
-def inmuebles():
-    estado = request.args.get('estado')
-    if estado:
-        inmuebles = Inmueble.query.filter_by(estado=estado).all()
-    else:
-        inmuebles = Inmueble.query.all()
-    return render_template('inmuebles.html', inmuebles=inmuebles)
-
-@app.route('/crear_inmueble', methods=['GET', 'POST'])
-@login_required
-def crear_inmueble():
-    form = CrearInmuebleForm()
-    form.visto_por_ids.choices = [(c.id, c.nombre) for c in Cliente.query.all()]
-    if form.validate_on_submit():
-        inmueble = Inmueble(
-            direccion=form.direccion.data,
-            descripcion=form.descripcion.data,
-            categoria=form.categoria.data,
-            precio_min=form.precio_min.data,
-            precio_max=form.precio_max.data,
-            estado=form.estado.data
-        )
-        inmueble.visto_por_clientes = Cliente.query.filter(Cliente.id.in_(form.visto_por_ids.data)).all() if form.visto_por_ids.data else []
-        db.session.add(inmueble)
-        try:
-            db.session.commit()
-            flash('Inmueble creado correctamente')
-            return redirect(url_for('inmuebles'))
-        except Exception as e:
-            db.session.rollback()
-            flash('Error al crear inmueble: {}'.format(str(e)))
-    return render_template('crear_inmueble.html', form=form)
-
-@app.route('/editar_inmueble/<int:inmueble_id>', methods=['GET', 'POST'])
-@login_required
-def editar_inmueble(inmueble_id):
-    inmueble = Inmueble.query.get_or_404(inmueble_id)
-    form = CrearInmuebleForm(obj=inmueble)
-    form.visto_por_ids.choices = [(c.id, c.nombre) for c in Cliente.query.all()]
-    if form.validate_on_submit():
-        inmueble.direccion = form.direccion.data
-        inmueble.descripcion = form.descripcion.data
-        inmueble.categoria = form.categoria.data
-        inmueble.precio_min = form.precio_min.data
-        inmueble.precio_max = form.precio_max.data
-        inmueble.estado = form.estado.data
-        inmueble.visto_por_clientes = Cliente.query.filter(Cliente.id.in_(form.visto_por_ids.data)).all() if form.visto_por_ids.data else []
-        try:
-            db.session.commit()
-            flash('Inmueble actualizado correctamente')
-            return redirect(url_for('inmuebles'))
-        except Exception as e:
-            db.session.rollback()
-            flash('Error al actualizar inmueble: {}'.format(str(e)))
-    if request.method == 'GET':
-        form.visto_por_ids.data = [c.id for c in inmueble.visto_por_clientes]
-    return render_template('editar_inmueble.html', form=form, inmueble=inmueble)
-
-@app.route('/crear_registro', methods=['GET', 'POST'])
-@login_required
-def crear_registro():
-    form = CrearRegistroForm()
-    form.usuario_id.choices = [(u.id, u.nombre) for u in Usuario.query.all()]
-    form.cliente_id.choices = [(c.id, c.nombre) for c in Cliente.query.all()]
-    form.inmueble_id.choices = [(0, 'Sin inmueble')] + [(i.id, i.direccion) for i in Inmueble.query.all()]
-    if form.validate_on_submit():
-        registro = Registro(
-            usuario_id=form.usuario_id.data,
-            cliente_id=form.cliente_id.data,
-            inmueble_id=form.inmueble_id.data if form.inmueble_id.data != 0 else None,
-            fecha=form.fecha.data,
-            comentario=form.comentario.data
-        )
-        db.session.add(registro)
-        try:
-            db.session.commit()
-            flash('Registro creado correctamente')
-            return redirect(url_for('registros'))
-        except Exception as e:
-            db.session.rollback()
-            flash('Error al crear registro: {}'.format(str(e)))
-    return render_template('crear_registro.html', form=form)
-
-@app.route('/editar_registro/<int:registro_id>', methods=['GET', 'POST'])
-@login_required
-def editar_registro(registro_id):
-    registro = Registro.query.get_or_404(registro_id)
-    form = CrearRegistroForm(obj=registro)
-    form.usuario_id.choices = [(u.id, u.nombre) for u in Usuario.query.all()]
-    form.cliente_id.choices = [(c.id, c.nombre) for c in Cliente.query.all()]
-    form.inmueble_id.choices = [(0, 'Sin inmueble')] + [(i.id, i.direccion) for i in Inmueble.query.all()]
-    if form.validate_on_submit():
-        registro.usuario_id = form.usuario_id.data
-        registro.cliente_id = form.cliente_id.data
-        registro.inmueble_id = form.inmueble_id.data if form.inmueble_id.data != 0 else None
-        registro.fecha = form.fecha.data
-        registro.comentario = form.comentario.data
-        try:
-            db.session.commit()
-            flash('Registro actualizado correctamente')
-            return redirect(url_for('registros'))
-        except Exception as e:
-            db.session.rollback()
-            flash('Error al actualizar registro: {}'.format(str(e)))
-    
-    if request.method == 'GET':
-        form.inmueble_id.data = registro.inmueble_id or 0
-
-    return render_template('editar_registro.html', form=form, registro=registro)
 
 @app.route('/calendario')
 @login_required
@@ -327,33 +223,176 @@ def eventos():
     eventos = Evento.query.order_by(Evento.fecha.asc()).all()
     return render_template('eventos.html', eventos=eventos)
 
-@app.route('/crear_evento', methods=['GET', 'POST'])
+@app.route('/crear_tarea', methods=['GET', 'POST'])
 @login_required
-def crear_evento():
-    form = CrearEventoForm()
+def crear_tarea():
+    form = CrearTareaForm()
     form.usuario_id.choices = [(u.id, u.nombre) for u in Usuario.query.all()]
-    form.cliente_id.choices = [(c.id, c.nombre) for c in Cliente.query.all()]
-    form.inmueble_id.choices = [(0, 'Sin inmueble')] + [(i.id, i.direccion) for i in Inmueble.query.all()]
+    # Precargar usuario y cliente si vienen por GET
+    if request.method == 'GET':
+        usuario_id = request.args.get('usuario_id', type=int)
+        cliente_id = request.args.get('cliente_id', type=int)
+        form.usuario_id.data = usuario_id if usuario_id else current_user.id
+        if cliente_id:
+            cliente = Cliente.query.get(cliente_id)
+            if cliente:
+                form.cliente_id.data = cliente.id
+                form.cliente_nombre.data = f"{cliente.nombre} ({cliente.telefono})"
     if form.validate_on_submit():
-        evento = Evento(
-            titulo=form.titulo.data,
-            fecha=form.fecha.data,
-            hora_inicio=form.hora_inicio.data,
-            hora_fin=form.hora_fin.data,
-            descripcion=form.descripcion.data,
+        # Convertir la hora de string a objeto time
+        hora_obj = datetime.datetime.strptime(form.hora.data, "%H:%M").time()
+        tarea = Tarea(
             usuario_id=form.usuario_id.data,
-            cliente_id=form.cliente_id.data,
-            inmueble_id=form.inmueble_id.data if form.inmueble_id.data != 0 else None
+            cliente_id=form.cliente_id.data if form.cliente_id.data else None,
+            fecha=form.fecha.data,
+            hora=hora_obj,
+            comentario=form.comentario.data,
+            resolucion=form.resolucion.data,
+            estado=form.estado.data
         )
-        db.session.add(evento)
+        db.session.add(tarea)
         try:
             db.session.commit()
-            flash('Evento creado correctamente')
-            return redirect(url_for('eventos'))
+            flash('Tarea creada correctamente')
+            return redirect(url_for('dashboard'))
         except Exception as e:
             db.session.rollback()
-            flash('Error al crear evento: {}'.format(str(e)))
-    return render_template('crear_evento.html', form=form)
+            flash('Error al crear tarea: {}'.format(str(e)))
+    return render_template('crear_tarea.html', form=form)
+
+@app.route('/editar_tarea/<int:tarea_id>', methods=['GET', 'POST'])
+@login_required
+def editar_tarea(tarea_id):
+    tarea = Tarea.query.get_or_404(tarea_id)
+    form = ResolverTareaForm(obj=tarea)
+    form.usuario_id.choices = [(u.id, u.nombre) for u in Usuario.query.all()]
+
+    if request.method == 'GET':
+        # Populate form with existing data
+        form.usuario_id.data = tarea.usuario_id
+        if tarea.cliente:
+            form.cliente_nombre.data = f"{tarea.cliente.nombre} ({tarea.cliente.telefono})"
+            form.cliente_id.data = tarea.cliente_id
+            form.estado.data = tarea.estado
+
+    # Ocultar el select de estado en el template (solo usarlo para POST)
+    form.estado.render_kw = {'style': 'display:none;'}
+
+    if form.validate_on_submit():
+        tarea.resolucion = form.resolucion.data
+        # Si el usuario ha pulsado un botón de estado, usar ese valor
+        estado_post = request.form.get('estado')
+        if estado_post:
+            tarea.estado = estado_post
+        else:
+            tarea.estado = form.estado.data
+        try:
+            db.session.commit()
+            # Solo redirigir a crear_tarea si es reagendada y reagendar=1
+            if tarea.estado == 'reagendada' and request.args.get('reagendar') == '1':
+                return redirect(url_for('crear_tarea', cliente_id=tarea.cliente_id, usuario_id=tarea.usuario_id))
+            # Para otros estados, simplemente redirigir al dashboard
+            flash('Resolución de la tarea actualizada correctamente.')
+            return redirect(url_for('dashboard'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al actualizar la tarea: {e}')
+    return render_template('editar_tarea.html', form=form, tarea=tarea)
+
+@app.route('/api/events')
+@login_required
+def api_events():
+    start_str = request.args.get('start')
+    end_str = request.args.get('end')
+    mostrar_resueltas = request.args.get('mostrar_resueltas') == '1'
+
+    start_date = datetime.datetime.fromisoformat(start_str.split('T')[0]).date()
+    end_date = datetime.datetime.fromisoformat(end_str.split('T')[0]).date()
+
+    events = []
+
+    # Encabezado para la vista diaria
+    if (end_date - start_date).days <= 1:
+        events.append({
+            'id': 'header',
+            'title': 'ENCABEZADO',
+            'start': datetime.datetime.combine(start_date, datetime.time.min).isoformat(),
+            'backgroundColor': '#f8f9fa',
+            'borderColor': '#dee2e6',
+            'editable': False,
+            'allDay': True,
+            'extendedProps': {
+                'isHeader': True
+            }
+        })
+
+    # Get Tareas
+    tareas = Tarea.query.filter(Tarea.fecha >= start_date, Tarea.fecha < end_date).all()
+    tareas_por_hacer = [t for t in tareas if t.estado == 'por_hacer']
+    tareas_resueltas = [t for t in tareas if t.estado in ['ha_comprado', 'ha_alquilado', 'cancelado', 'reagendada']]
+
+    # Mostrar primero las por hacer
+    for tarea in tareas_por_hacer:
+        event_start = datetime.datetime.combine(tarea.fecha, tarea.hora if tarea.hora else datetime.time.min)
+        events.append({
+            'title': tarea.comentario or 'Sin descripción',
+            'start': event_start.isoformat(),
+            'url': url_for('editar_tarea', tarea_id=tarea.id),
+            'backgroundColor': tarea.usuario.color if tarea.usuario else '#6c757d',
+            'borderColor': tarea.usuario.color if tarea.usuario else '#6c757d',
+            'extendedProps': {
+                'comercial': tarea.usuario.nombre if tarea.usuario else '',
+                'cliente': tarea.cliente.nombre if tarea.cliente else '',
+                'telefono': tarea.cliente.telefono if tarea.cliente and tarea.cliente.telefono else '',
+                'estado': 'Por hacer',
+                'isHeader': False
+            }
+        })
+
+    # Si se piden resueltas, añadir separador y luego las resueltas
+    if mostrar_resueltas and tareas_resueltas:
+        for tarea in tareas_resueltas:
+            event_start = datetime.datetime.combine(tarea.fecha, tarea.hora if tarea.hora else datetime.time.min)
+            events.append({
+                'title': tarea.comentario or 'Sin descripción',
+                'start': event_start.isoformat(),
+                'url': url_for('editar_tarea', tarea_id=tarea.id),
+                'backgroundColor': tarea.usuario.color if tarea.usuario else '#6c757d',
+                'borderColor': tarea.usuario.color if tarea.usuario else '#6c757d',
+                'extendedProps': {
+                    'comercial': tarea.usuario.nombre if tarea.usuario else '',
+                    'cliente': tarea.cliente.nombre if tarea.cliente else '',
+                    'telefono': tarea.cliente.telefono if tarea.cliente and tarea.cliente.telefono else '',
+                    'estado': 'Ha comprado' if tarea.estado == 'ha_comprado' else (
+                        'Ha alquilado' if tarea.estado == 'ha_alquilado' else (
+                        'Cancelado' if tarea.estado == 'cancelado' else tarea.estado)),
+                    'isHeader': False
+                }
+            })
+
+    # Get Eventos
+    eventos_db = Evento.query.filter(Evento.fecha >= start_date, Evento.fecha < end_date).all()
+    for evento in eventos_db:
+        start_time = evento.hora_inicio or datetime.time.min
+        end_time = evento.hora_fin or datetime.time.max
+        
+        event_start = datetime.datetime.combine(evento.fecha, start_time)
+        event_end = datetime.datetime.combine(evento.fecha, end_time)
+
+        events.append({
+            'title': evento.titulo,
+            'start': event_start.isoformat(),
+            'end': event_end.isoformat(),
+            'url': url_for('editar_evento', evento_id=evento.id),
+            'backgroundColor': evento.usuario.color if evento.usuario else '#6c757d',
+            'borderColor': evento.usuario.color if evento.usuario else '#6c757d',
+            'extendedProps': {
+                'comercial': evento.usuario.nombre if evento.usuario else '',
+                'cliente': evento.cliente.nombre if evento.cliente else ''
+            }
+        })
+        
+    return jsonify(events)
 
 @app.route('/editar_evento/<int:evento_id>', methods=['GET', 'POST'])
 @login_required
@@ -362,7 +401,6 @@ def editar_evento(evento_id):
     form = CrearEventoForm(obj=evento)
     form.usuario_id.choices = [(u.id, u.nombre) for u in Usuario.query.all()]
     form.cliente_id.choices = [(c.id, c.nombre) for c in Cliente.query.all()]
-    form.inmueble_id.choices = [(0, 'Sin inmueble')] + [(i.id, i.direccion) for i in Inmueble.query.all()]
     if form.validate_on_submit():
         evento.titulo = form.titulo.data
         evento.fecha = form.fecha.data
@@ -371,7 +409,6 @@ def editar_evento(evento_id):
         evento.descripcion = form.descripcion.data
         evento.usuario_id = form.usuario_id.data
         evento.cliente_id = form.cliente_id.data
-        evento.inmueble_id = form.inmueble_id.data if form.inmueble_id.data != 0 else None
         try:
             db.session.commit()
             flash('Evento actualizado correctamente')
@@ -380,9 +417,6 @@ def editar_evento(evento_id):
             db.session.rollback()
             flash('Error al actualizar evento: {}'.format(str(e)))
 
-    if request.method == 'GET':
-        form.inmueble_id.data = evento.inmueble_id or 0
-        
     return render_template('editar_evento.html', form=form, evento=evento)
 
 @app.route('/respuestas_formulario')
@@ -400,20 +434,48 @@ def formulario():
 @login_required
 def inversores():
     estado = request.args.get('estado')
-    temperatura = request.args.get('temperatura')
     localidad = request.args.get('localidad')
     query = Cliente.query.filter_by(tipo_cliente='inversor')
     if estado:
         query = query.filter_by(estado=estado)
-    if temperatura:
-        query = query.filter_by(temperatura=int(temperatura))
     if localidad:
         query = query.filter_by(localidad=localidad)
     clientes = query.all()
     usuarios_dict = {u.id: u.nombre for u in Usuario.query.all()}
-    inmuebles_dict = {i.id: i.direccion for i in Inmueble.query.all()}
-    return render_template('inversores.html', clientes=clientes, usuarios_dict=usuarios_dict, inmuebles_dict=inmuebles_dict)
+    return render_template('inversores.html', clientes=clientes, usuarios_dict=usuarios_dict)
 
+@app.route('/eliminar_tarea/<int:tarea_id>', methods=['POST'])
+@login_required
+def eliminar_tarea(tarea_id):
+    tarea = Tarea.query.get_or_404(tarea_id)
+    try:
+        db.session.delete(tarea)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/crear_cliente_rapido', methods=['POST'])
+@login_required
+def crear_cliente_rapido():
+    data = request.get_json()
+    nombre = data.get('nombre', '').strip()
+    localidad = data.get('localidad', '').strip()
+    telefono = data.get('telefono', '').strip()
+    if not nombre or not localidad or not telefono:
+        return jsonify({'success': False, 'error': 'Todos los campos son obligatorios'}), 400
+    # Comprobar si el teléfono ya existe
+    if Cliente.query.filter_by(telefono=telefono).first():
+        return jsonify({'success': False, 'error': 'Ya existe un cliente con ese teléfono'}), 400
+    cliente = Cliente(nombre=nombre, localidad=localidad, telefono=telefono)
+    db.session.add(cliente)
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'cliente_id': cliente.id, 'cliente_texto': f"{cliente.nombre} ({cliente.telefono})"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
     with app.app_context():
