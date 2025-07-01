@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, make_response
+from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, make_response, send_file
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import joinedload
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
@@ -190,10 +190,14 @@ def crear_usuario():
 @app.route('/editar_usuario/<int:usuario_id>', methods=['GET', 'POST'])
 @login_required
 def editar_usuario(usuario_id):
+    usuario = Usuario.query.get_or_404(usuario_id)
+    # Solo el propio root puede editarse
+    if usuario.nombre == 'root' and current_user.nombre != 'root':
+        flash('Solo el usuario root puede editarse a sí mismo.')
+        return redirect(url_for('usuarios'))
     if not current_user.es_admin:
         flash('No tienes permiso para acceder a esta página.')
         return redirect(url_for('calendario'))
-    usuario = Usuario.query.get_or_404(usuario_id)
     usuario.email = usuario.email or ""
     usuario.telefono = usuario.telefono or ""
     form = CrearUsuarioForm(obj=usuario)
@@ -491,10 +495,14 @@ def crear_cliente_rapido():
 @app.route('/toggle_usuario/<int:usuario_id>', methods=['POST'])
 @login_required
 def toggle_usuario(usuario_id):
+    usuario = Usuario.query.get_or_404(usuario_id)
+    # Solo el propio root puede desactivarse
+    if usuario.nombre == 'root' and current_user.nombre != 'root':
+        flash('Solo el usuario root puede desactivarse a sí mismo.')
+        return redirect(url_for('usuarios'))
     if not current_user.es_admin:
         flash('No tienes permiso para realizar esta acción.')
         return redirect(url_for('usuarios'))
-    usuario = Usuario.query.get_or_404(usuario_id)
     usuario.activo = not usuario.activo
     try:
         db.session.commit()
@@ -516,6 +524,18 @@ def toggle_cliente(cliente_id):
         db.session.rollback()
         flash(f'Error al actualizar cliente: {e}')
     return redirect(url_for('clientes'))
+
+@app.route('/descargar_db')
+@login_required
+def descargar_db():
+    if not current_user.es_admin:
+        flash('No tienes permiso para descargar la base de datos.')
+        return redirect(url_for('dashboard'))
+    return send_file(
+        'instance/database.db',
+        as_attachment=True,
+        download_name='database.db'
+    )
 
 if __name__ == '__main__':
     with app.app_context():
