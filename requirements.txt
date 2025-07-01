@@ -6,3 +6,7 @@ WTForms
 email-validator 
 openai
 dotenv
+gunicorn
+flask-cors
+flask-migrate
+flask-cors
