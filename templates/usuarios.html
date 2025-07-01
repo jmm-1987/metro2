@@ -7,7 +7,14 @@
         <i class="bi bi-person-plus"></i> Crear usuario
     </a>
 </div>
-
+<form method="get" class="mb-3" style="max-width:400px;">
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="1" id="mostrarInactivos" name="inactivos" onchange="this.form.submit()" {% if request.args.get('inactivos') == '1' %}checked{% endif %}>
+        <label class="form-check-label" for="mostrarInactivos">
+            Mostrar usuarios inactivos
+        </label>
+    </div>
+</form>
 <div class="table-responsive">
     <table class="table table-hover align-middle">
         <thead class="table-light">
@@ -36,6 +43,13 @@
                     <a href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-pencil-square"></i> Editar
                     </a>
+                    {% if current_user.es_admin and usuario.id != current_user.id %}
+                        <form method="POST" action="{{ url_for('toggle_usuario', usuario_id=usuario.id) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-sm {% if usuario.activo %}btn-danger{% else %}btn-success{% endif %}" onclick="return confirm('¿Seguro que quieres {% if usuario.activo %}desactivar{% else %}activar{% endif %} este usuario?');">
+                                {% if usuario.activo %}Desactivar{% else %}Activar{% endif %}
+                            </button>
+                        </form>
+                    {% endif %}
                 </td>
             </tr>
             {% else %}

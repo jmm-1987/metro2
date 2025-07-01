@@ -79,7 +79,10 @@ def buscar_clientes():
 @login_required
 def clientes():
     estado = request.args.get('estado')
+    mostrar_inactivos = request.args.get('inactivos') == '1'
     query = Cliente.query
+    if not mostrar_inactivos:
+        query = query.filter_by(activo=True)
     if estado:
         query = query.filter_by(estado=estado)
     clientes = query.all()
@@ -92,7 +95,11 @@ def usuarios():
     if not current_user.es_admin:
         flash('No tienes permiso para acceder a esta página.')
         return redirect(url_for('calendario'))
-    usuarios = Usuario.query.all()
+    mostrar_inactivos = request.args.get('inactivos') == '1'
+    query = Usuario.query
+    if not mostrar_inactivos:
+        query = query.filter_by(activo=True)
+    usuarios = query.all()
     return render_template('usuarios.html', usuarios=usuarios)
 
 @app.route('/crear_cliente', methods=['GET', 'POST'])
@@ -187,11 +194,15 @@ def editar_usuario(usuario_id):
         flash('No tienes permiso para acceder a esta página.')
         return redirect(url_for('calendario'))
     usuario = Usuario.query.get_or_404(usuario_id)
+    usuario.email = usuario.email or ""
+    usuario.telefono = usuario.telefono or ""
     form = CrearUsuarioForm(obj=usuario)
     if form.validate_on_submit():
         usuario.nombre = form.nombre.data
         usuario.es_admin = form.es_admin.data
         usuario.color = form.color.data
+        usuario.email = form.email.data
+        usuario.telefono = form.telefono.data
         if form.password.data:
             usuario.password = generate_password_hash(form.password.data)
         try:
@@ -476,6 +487,35 @@ def crear_cliente_rapido():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/toggle_usuario/<int:usuario_id>', methods=['POST'])
+@login_required
+def toggle_usuario(usuario_id):
+    if not current_user.es_admin:
+        flash('No tienes permiso para realizar esta acción.')
+        return redirect(url_for('usuarios'))
+    usuario = Usuario.query.get_or_404(usuario_id)
+    usuario.activo = not usuario.activo
+    try:
+        db.session.commit()
+        flash(f"Usuario {'activado' if usuario.activo else 'desactivado'} correctamente.")
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al actualizar usuario: {e}')
+    return redirect(url_for('usuarios'))
+
+@app.route('/toggle_cliente/<int:cliente_id>', methods=['POST'])
+@login_required
+def toggle_cliente(cliente_id):
+    cliente = Cliente.query.get_or_404(cliente_id)
+    cliente.activo = not cliente.activo
+    try:
+        db.session.commit()
+        flash(f"Cliente {'activado' if cliente.activo else 'desactivado'} correctamente.")
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al actualizar cliente: {e}')
+    return redirect(url_for('clientes'))
 
 if __name__ == '__main__':
     with app.app_context():

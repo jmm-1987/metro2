@@ -44,6 +44,14 @@
             <option value="finca rustica" {% if request.args.get('interes') == 'finca rustica' %}selected{% endif %}>Finca rústica</option>
         </select>
     </div>
+    <div style="align-self:center;">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="1" id="mostrarInactivos" name="inactivos" onchange="this.form.submit()" {% if request.args.get('inactivos') == '1' %}checked{% endif %}>
+            <label class="form-check-label" for="mostrarInactivos">
+                Mostrar clientes inactivos
+            </label>
+        </div>
+    </div>
 </form>
 <div class="table-responsive">
 <table class="table table-hover align-middle shadow-sm bg-white rounded">
@@ -62,6 +70,7 @@
             <th>Encuesta</th>
             <th>Fecha de alta</th>
             <th>Editar</th>
+            <th>Estado</th>
         </tr>
     </thead>
     <tbody>
@@ -100,9 +109,16 @@
             <td><input type="checkbox" disabled {% if cliente.encuesta_enviada %}checked{% endif %}></td>
             <td>{% if cliente.fecha_creacion %}{{ cliente.fecha_creacion.strftime('%d/%m/%Y') }}{% else %}-{% endif %}</td>
             <td><a href="/editar_cliente/{{ cliente.id }}" title="Editar cliente" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil-square"></i></a></td>
+            <td>
+                <form method="POST" action="{{ url_for('toggle_cliente', cliente_id=cliente.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-sm {{ 'btn-danger' if cliente.activo else 'btn-success' }}" onclick="return confirm('¿Seguro que quieres {{ 'desactivar' if cliente.activo else 'activar' }} este cliente?');">
+                        {{ 'Desactivar' if cliente.activo else 'Activar' }}
+                    </button>
+                </form>
+            </td>
         </tr>
     {% else %}
-        <tr><td colspan="13"><em>No hay clientes registrados.</em></td></tr>
+        <tr><td colspan="14"><em>No hay clientes registrados.</em></td></tr>
     {% endfor %}
     </tbody>
 </table>

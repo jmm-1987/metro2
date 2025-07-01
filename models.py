@@ -13,6 +13,7 @@ class Usuario(UserMixin, db.Model):
     color = db.Column(db.String(7), nullable=True, default='#3788d8') # Color en formato hex, e.g., #RRGGBB
     email = db.Column(db.String(120), unique=True, nullable=True)
     telefono = db.Column(db.String(20), unique=True, nullable=True)
+    activo = db.Column(db.Boolean, default=True)  # Nuevo campo para desactivar usuario
     # Relación con Evento - backref crea 'usuario' en Evento
     eventos = db.relationship('Evento', backref='usuario', lazy=True)
     tareas = db.relationship('Tarea', back_populates='usuario')
@@ -33,6 +34,7 @@ class Cliente(db.Model):
     encuesta_enviada = db.Column(db.Boolean, default=False)
     comercial_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    activo = db.Column(db.Boolean, default=True)  # Nuevo campo para desactivar cliente
     eventos = db.relationship('Evento', backref='cliente', lazy=True)
     tareas = db.relationship('Tarea', back_populates='cliente')
     visto_por = db.Column(db.Integer, db.ForeignKey('cliente.id'), nullable=True)
