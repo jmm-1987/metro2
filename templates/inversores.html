@@ -2,61 +2,70 @@
 {% block title %}Inversores{% endblock %}
 {% block content %}
 <h2 class="mb-3">Inversores</h2>
-<form id="form-filtros" method="get" class="mb-4" style="max-width:1000px;display:flex;gap:16px;align-items:end;flex-wrap:wrap;">
-  <div style="flex:1;min-width:200px;">
-    <label for="buscadorNombre">Buscar nombre:</label>
-    <input type="text" id="buscadorNombre" name="nombre" value="{{ request.args.get('nombre', '') }}" placeholder="Buscar por nombre..." class="form-control" style="min-width:180px;">
-  </div>
-  <div style="flex:1;min-width:200px;">
-    <label for="buscadorTelefono">Buscar teléfono:</label>
-    <input type="text" id="buscadorTelefono" name="telefono" value="{{ request.args.get('telefono', '') }}" placeholder="Buscar por teléfono..." class="form-control" style="min-width:180px;">
-  </div>
-  <div>
-    <label for="localidad">Localidad:</label>
-    <input type="text" id="localidad" name="localidad" value="{{ request.args.get('localidad', '') }}" class="form-control">
-  </div>
-  <div>
-    <label for="interes">Interés:</label>
-    <select name="interes" id="interes" class="form-select">
-      <option value="">Todos</option>
-      <option value="vivienda" {% if request.args.get('interes') == 'vivienda' %}selected{% endif %}>Vivienda</option>
-      <option value="local comercial" {% if request.args.get('interes') == 'local comercial' %}selected{% endif %}>Local comercial</option>
-      <option value="nave industrial" {% if request.args.get('interes') == 'nave industrial' %}selected{% endif %}>Nave industrial</option>
-      <option value="terreno" {% if request.args.get('interes') == 'terreno' %}selected{% endif %}>Terreno</option>
-      <option value="finca rustica" {% if request.args.get('interes') == 'finca rustica' %}selected{% endif %}>Finca rústica</option>
-    </select>
-  </div>
-  <div>
-    <label for="precio_min">Precio mínimo:</label>
-    <input type="number" id="precio_min" name="precio_min" value="{{ request.args.get('precio_min', '') }}" class="form-control" min="0">
-  </div>
-  <div>
-    <label for="precio_max">Precio máximo:</label>
-    <input type="number" id="precio_max" name="precio_max" value="{{ request.args.get('precio_max', '') }}" class="form-control" min="0">
-  </div>
-  <div>
-    <label for="zona">Zona:</label>
-    <select name="zona" id="zona" class="form-select">
-      <option value="">Todas</option>
-      <option value="centro" {% if request.args.get('zona') == 'centro' %}selected{% endif %}>Centro</option>
-      <option value="bodegones-sur" {% if request.args.get('zona') == 'bodegones-sur' %}selected{% endif %}>Bodegones-Sur</option>
-      <option value="nueva ciudad" {% if request.args.get('zona') == 'nueva ciudad' %}selected{% endif %}>Nueva Ciudad</option>
-      <option value="sindicales" {% if request.args.get('zona') == 'sindicales' %}selected{% endif %}>Sindicales</option>
-      <option value="maria aux" {% if request.args.get('zona') == 'maria aux' %}selected{% endif %}>Maria Aux</option>
-      <option value="adabias" {% if request.args.get('zona') == 'adabias' %}selected{% endif %}>Adabias</option>
-      <option value="montealto" {% if request.args.get('zona') == 'montealto' %}selected{% endif %}>Montealto</option>
-    </select>
-  </div>
-  <div style="align-self:center;">
-    <button type="submit" class="btn btn-primary">Filtrar</button>
+<form id="form-filtros" class="mb-4" style="width:100%;display:flex;gap:24px;align-items:end;flex-wrap:wrap;">
+  <div style="display:flex;flex:1;gap:24px;align-items:end;flex-wrap:wrap;">
+    <div style="flex:1;min-width:120px;">
+      <label for="buscadorNombre">Buscar nombre:</label>
+      <input type="text" id="buscadorNombre" placeholder="Buscar por nombre..." class="form-control" style="min-width:180px;">
+    </div>
+    <div style="flex:1;min-width:120px;">
+      <label for="buscadorTelefono">Buscar teléfono:</label>
+      <input type="text" id="buscadorTelefono" placeholder="Buscar por teléfono..." class="form-control" style="min-width:180px;">
+    </div>
+    <div style="min-width:200px;">
+      <label for="localidad">Localidad:</label>
+      <input type="text" id="localidad" class="form-control">
+    </div>
+    <div style="min-width:200px;">
+      <label for="estado">Estado:</label>
+      <select id="estado" class="form-select" style="min-width:200px;">
+        <option value="">Todos</option>
+        <option value="en_curso">En curso</option>
+        <option value="pendiente">Standby</option>
+      </select>
+    </div>
+    <div>
+      <label for="interes">Interés:</label>
+      <select id="interes" class="form-select" style="min-width:200px;">
+        <option value="">Todos</option>
+        <option value="vivienda">Vivienda</option>
+        <option value="local comercial">Local comercial</option>
+        <option value="nave industrial">Nave industrial</option>
+        <option value="terreno">Terreno</option>
+        <option value="finca rustica">Finca rústica</option>
+      </select>
+    </div>
+    <div>
+      <label for="cantidad">Cantidad:</label>
+      <input type="number" id="cantidad" class="form-control" min="0" style="min-width:200px;">
+    </div>
+    <div>
+      <label for="zona">Zona:</label>
+      <select id="zona" class="form-select" style="min-width:200px;">
+        <option value="">Todas</option>
+        <option value="centro">Centro</option>
+        <option value="bodegones-sur">Bodegones-Sur</option>
+        <option value="nueva ciudad">Nueva Ciudad</option>
+        <option value="sindicales">Sindicales</option>
+        <option value="maria aux">Maria Aux</option>
+        <option value="adabias">Adabias</option>
+        <option value="montealto">Montealto</option>
+      </select>
+    </div>
   </div>
 </form>
-<form id="form-mailing" method="post">
-<div class="mb-3">
-  <button type="button" class="btn btn-success" id="btn-difusion"><i class="bi bi-whatsapp"></i> Enviar difusión WhatsApp</button>
+<div class="d-flex gap-4 align-items-end mb-3" style="max-width:700px;">
+  <div style="flex:1;">
+    <label for="mensaje_whatsapp" class="form-label">Texto para WhatsApp:</label>
+    <input type="text" id="mensaje_whatsapp" class="form-control bg-success-subtle" placeholder="Escribe el mensaje a enviar...">
+  </div>
+  <div style="flex:1;">
+    <label for="alias_envio" class="form-label">Alias:</label>
+    <input type="text" id="alias_envio" class="form-control bg-success-subtle" placeholder="Alias para grabación posterior">
+  </div>
 </div>
 <div class="table-responsive">
-<table class="table table-hover align-middle shadow-sm bg-white rounded">
+<table class="table table-hover align-middle shadow-sm bg-white rounded" id="tabla-inversores" style="min-width:1300px;">
     <thead class="table-light">
         <tr>
             <th><input type="checkbox" id="check-all" onclick="toggleAll(this)"></th>
@@ -71,72 +80,114 @@
             <th>Editar</th>
         </tr>
     </thead>
-    <tbody>
-    {% for cliente in clientes %}
-        <tr>
-            <td><input type="checkbox" name="seleccionados" value="{{ cliente.id }}"></td>
-            <td>
-                {% if cliente.temperatura %}
-                  {% set temp_color_map = {1: '#e0e0e0', 2: '#b3e5fc', 3: '#ffe082', 4: '#ffb74d', 5: '#e57373'} %}
-                  <span title="Temperatura {{ cliente.temperatura }}" style="display:inline-block;width:18px;height:18px;border-radius:50%;background:{{ temp_color_map[cliente.temperatura] }};border:2px solid #ccc;vertical-align:middle;margin-right:6px;"></span>
-                {% endif %}
-                <a href="/editar_cliente/{{ cliente.id }}" class="fw-bold text-decoration-none">{{ cliente.nombre }}</a>
-            </td>
-            <td>{{ cliente.telefono }}</td>
-            <td><span class="badge bg-secondary">{{ cliente.estado.replace('_', ' ').capitalize() }}</span></td>
-            <td>{{ cliente.comercial_id if not cliente.comercial_id else (usuarios_dict[cliente.comercial_id] if usuarios_dict and cliente.comercial_id in usuarios_dict else 'Sin asignar') }}</td>
-            <td>{{ cliente.localidad or '-' }}</td>
-            <td>
-                {% if cliente.interes %}
-                  {% for interes in cliente.interes.split(',') %}
-                    <span class="badge bg-warning text-dark">{{ interes }}</span>
-                  {% endfor %}
-                {% else %}-{% endif %}
-            </td>
-            <td>{{ cliente.precio_min }} - {{ cliente.precio_max }}</td>
-            <td>
-              {% if cliente.telefono %}
-                <a href="https://wa.me/{{ cliente.telefono|replace(' ', '') }}" title="Enviar WhatsApp" class="btn btn-outline-success btn-sm whatsapp-btn" data-telefono="{{ cliente.telefono|replace(' ', '') }}" target="_blank">
-                  <i class="bi bi-whatsapp"></i>
-                </a>
-              {% endif %}
-            </td>
-            <td><a href="/editar_cliente/{{ cliente.id }}" title="Editar cliente" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil-square"></i></a></td>
-        </tr>
-    {% else %}
-        <tr><td colspan="10"><em>No hay inversores registrados.</em></td></tr>
-    {% endfor %}
+    <tbody id="tbody-inversores">
     </tbody>
 </table>
 </div>
-</form>
+<form id="form-mailing" method="post">
 <script>
+const clientes = [
+{% for cliente in clientes %}
+  {
+    id: {{ cliente.id }},
+    nombre: `{{ cliente.nombre|e }}`,
+    telefono: `{{ cliente.telefono|e }}`,
+    estado: `{{ cliente.estado|e }}`,
+    comercial: `{{ usuarios_dict[cliente.comercial_id]|e if usuarios_dict and cliente.comercial_id in usuarios_dict else 'Sin asignar' }}`,
+    localidad: `{{ cliente.localidad|e if cliente.localidad else '' }}`,
+    interes: `{{ cliente.interes|e if cliente.interes else '' }}`,
+    precio_min: {{ cliente.precio_min if cliente.precio_min else 0 }},
+    precio_max: {{ cliente.precio_max if cliente.precio_max else 0 }},
+    zonas: `{{ cliente.zonas|e if cliente.zonas else '' }}`,
+    temperatura: {{ cliente.temperatura if cliente.temperatura else 0 }}
+  }{% if not loop.last %},{% endif %}
+{% endfor %}
+];
+
+function renderTabla(filtrados) {
+  const tbody = document.getElementById('tbody-inversores');
+  tbody.innerHTML = '';
+  if (filtrados.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10"><em>No hay inversores registrados.</em></td></tr>';
+    return;
+  }
+  filtrados.forEach(cliente => {
+    let tempColor = ['#e0e0e0', '#b3e5fc', '#ffe082', '#ffb74d', '#e57373'][cliente.temperatura-1] || '#e0e0e0';
+    tbody.innerHTML += `
+      <tr>
+        <td><input type="checkbox" name="seleccionados" value="${cliente.id}"></td>
+        <td>
+          ${cliente.temperatura ? `<span title="Temperatura ${cliente.temperatura}" style="display:inline-block;width:18px;height:18px;border-radius:50%;background:${tempColor};border:2px solid #ccc;vertical-align:middle;margin-right:6px;"></span>` : ''}
+          <a href="/editar_cliente/${cliente.id}" class="fw-bold text-decoration-none">${cliente.nombre}</a>
+        </td>
+        <td>${cliente.telefono}</td>
+        <td>
+          <span class="badge ${cliente.estado === 'en_curso' ? 'bg-secondary' : (cliente.estado === 'pendiente' ? 'bg-info text-dark' : 'bg-secondary')}">
+            ${cliente.estado === 'pendiente' ? 'Standby' : (cliente.estado.replace('_', ' ').charAt(0).toUpperCase() + cliente.estado.replace('_', ' ').slice(1))}
+          </span>
+        </td>
+        <td>${cliente.comercial}</td>
+        <td>${cliente.localidad || '-'}</td>
+        <td>${cliente.interes ? cliente.interes.split(',').map(i => `<span class='badge bg-warning text-dark'>${i}</span>`).join(' ') : '-'}</td>
+        <td>${(cliente.precio_min !== undefined && cliente.precio_min !== null) ? cliente.precio_min : 0} - ${(cliente.precio_max !== undefined && cliente.precio_max !== null && cliente.precio_max !== 0) ? cliente.precio_max : 999999}</td>
+        <td>${cliente.telefono ? `<a href="#" title="Enviar WhatsApp" class="btn btn-outline-success btn-sm whatsapp-btn" data-telefono="${cliente.telefono}"><i class="bi bi-whatsapp"></i></a>` : ''}</td>
+        <td><a href="/editar_cliente/${cliente.id}" title="Editar cliente" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil-square"></i></a></td>
+      </tr>
+    `;
+  });
+}
+
+function filtrarClientes() {
+  const nombre = document.getElementById('buscadorNombre').value.toLowerCase();
+  const telefono = document.getElementById('buscadorTelefono').value.toLowerCase();
+  const localidad = document.getElementById('localidad').value.toLowerCase();
+  const interes = document.getElementById('interes').value;
+  const cantidad = parseInt(document.getElementById('cantidad').value) || null;
+  const zona = document.getElementById('zona').value;
+  const estado = document.getElementById('estado').value;
+
+  return clientes.filter(c => {
+    if (nombre && !c.nombre.toLowerCase().includes(nombre)) return false;
+    if (telefono && !c.telefono.toLowerCase().includes(telefono)) return false;
+    if (localidad && !c.localidad.toLowerCase().includes(localidad)) return false;
+    if (interes && !(c.interes && c.interes.split(',').map(i => i.trim()).includes(interes))) return false;
+    if (cantidad !== null && !(c.precio_min <= cantidad && cantidad <= c.precio_max)) return false;
+    if (zona && !(c.zonas && c.zonas.split(',').map(z => z.trim()).includes(zona))) return false;
+    if (estado && c.estado !== estado) return false;
+    return true;
+  });
+}
+
+['buscadorNombre','buscadorTelefono','localidad','interes','cantidad','zona','estado'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    renderTabla(filtrarClientes());
+  });
+  document.getElementById(id).addEventListener('change', () => {
+    renderTabla(filtrarClientes());
+  });
+});
+
+// Render inicial
+renderTabla(clientes);
+
+// Abrir WhatsApp Web (o app si está asociada) y pasar el mensaje
+document.addEventListener('click', function(e) {
+  if (e.target.closest('.whatsapp-btn')) {
+    e.preventDefault();
+    const btn = e.target.closest('.whatsapp-btn');
+    let telefono = btn.getAttribute('data-telefono') || '';
+    telefono = telefono.replace(/\D/g, ''); // Solo dígitos
+    const mensaje = document.getElementById('mensaje_whatsapp').value.trim();
+    const webUrl = `https://wa.me/${telefono}${mensaje ? `?text=${encodeURIComponent(mensaje)}` : ''}`;
+    window.open(webUrl, '_blank');
+  }
+});
+
 function toggleAll(source) {
-  checkboxes = document.getElementsByName('seleccionados');
-  for(var i=0, n=checkboxes.length;i<n;i++) {
+  const checkboxes = document.getElementsByName('seleccionados');
+  for(let i=0, n=checkboxes.length;i<n;i++) {
     checkboxes[i].checked = source.checked;
   }
 }
-
-document.getElementById('btn-difusion').addEventListener('click', function() {
-  const seleccionados = Array.from(document.querySelectorAll('input[name="seleccionados"]:checked'));
-  if (seleccionados.length === 0) {
-    alert('Selecciona al menos un cliente para enviar la difusión.');
-    return;
-  }
-  const telefonos = seleccionados.map(cb => {
-    const row = cb.closest('tr');
-    return row.querySelector('td:nth-child(3)').textContent.trim().replace(/\s+/g, '');
-  }).filter(tel => tel);
-  if (telefonos.length === 0) {
-    alert('Ningún cliente seleccionado tiene teléfono.');
-    return;
-  }
-  // Generar enlaces de WhatsApp (uno por cliente)
-  telefonos.forEach(tel => {
-    const url = `https://wa.me/${tel}`;
-    window.open(url, '_blank');
-  });
-});
 </script>
 {% endblock %} 

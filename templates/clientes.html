@@ -2,8 +2,8 @@
 {% block title %}Clientes{% endblock %}
 {% block content %}
 <h2 class="mb-3">Clientes</h2>
-<a href="/crear_cliente" class="btn btn-primary mb-3"><i class="bi bi-person-plus"></i> Crear cliente</a>
-<form method="get" class="mb-4" style="max-width:1000px;display:flex;gap:16px;align-items:end;flex-wrap:wrap;">
+<form method="get" class="mb-4" style="max-width:1300px;display:flex;gap:16px;align-items:end;flex-wrap:wrap;">
+  <div style="display:flex;flex:1;gap:16px;align-items:end;flex-wrap:wrap;">
     <!-- Input de búsqueda por nombre como primer filtro -->
     <div style="flex:1;min-width:200px;">
         <label for="buscadorCliente">Buscar nombre:</label>
@@ -48,17 +48,15 @@
             <option value="montealto" {% if request.args.get('zona') == 'montealto' %}selected{% endif %}>Montealto</option>
         </select>
     </div>
-    <div style="align-self:center;">
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="1" id="mostrarInactivos" name="inactivos" onchange="this.form.submit()" {% if request.args.get('inactivos') == '1' %}checked{% endif %}>
-            <label class="form-check-label" for="mostrarInactivos">
-                Ver inactivos
-            </label>
-        </div>
+    <div style="align-self:end;min-width:120px;max-width:180px;display:flex;align-items:center;height:38px;white-space:nowrap;">
+        <input class="form-check-input me-2" type="checkbox" value="1" id="mostrarInactivos" name="inactivos" onchange="this.form.submit()" {% if request.args.get('inactivos') == '1' %}checked{% endif %}>
+        <label class="form-check-label" for="mostrarInactivos" style="margin-bottom:0;">Ver inactivos</label>
     </div>
+  </div>
+  <a href="/crear_cliente" class="btn btn-primary" style="height:38px;display:flex;align-items:center;align-self:end;margin-left:auto;"><i class="bi bi-person-plus"></i> Crear cliente</a>
 </form>
-<div class="table-responsive" style="max-width:1600px; margin:auto;">
-<table class="table table-hover align-middle shadow-sm bg-white rounded">
+<div class="table-responsive">
+<table class="table table-hover align-middle shadow-sm bg-white rounded" style="min-width:1300px;">
     <thead class="table-light">
         <tr>
             <th>Nombre</th>
@@ -179,16 +177,11 @@ const whatsappBtns = document.querySelectorAll('.whatsapp-btn');
 whatsappBtns.forEach(btn => {
   btn.addEventListener('click', function(e) {
     e.preventDefault();
-    const telefono = btn.getAttribute('data-telefono');
-    // Intentar abrir WhatsApp Business
-    const businessUrl = `whatsapp://send?phone=${telefono}`;
-    const personalUrl = `https://wa.me/${telefono}`;
-    // Probar primero con el protocolo de la app
-    window.open(businessUrl, '_blank');
-    // Fallback a web si no se abre la app
-    setTimeout(() => {
-      window.open(personalUrl, '_blank');
-    }, 500);
+    const telefono = btn.getAttribute('data-telefono').replace(/\D/g, '');
+    const mensajeInput = document.getElementById('mensaje_whatsapp');
+    const mensaje = mensajeInput ? mensajeInput.value.trim() : '';
+    const webUrl = `https://wa.me/${telefono}${mensaje ? `?text=${encodeURIComponent(mensaje)}` : ''}`;
+    window.open(webUrl, '_blank');
   });
 });
 
