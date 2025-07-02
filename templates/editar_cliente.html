@@ -28,6 +28,9 @@
         <div class="card-header-gradient">
           <span class="icon"><i class="bi bi-person-circle"></i></span> Editar cliente
         </div>
+        <div class="mb-2" style="padding: 0.5rem 1rem 0 1rem;">
+          <span class="badge bg-secondary">Estado: {{ cliente.estado.replace('_', ' ').capitalize() }}</span>
+        </div>
         <form method="POST" style="padding:1.2rem 0 0 0;">
             {{ form.hidden_tag() }}
             {% if form.errors %}
@@ -118,14 +121,14 @@
                 <div class="input-icon">
                   <span class="icon"><i class="bi bi-currency-dollar"></i></span>
                   {{ form.precio_min.label }}
-                  {{ form.precio_min(class_='form-control form-control-sm', step='1') }}
+                  {{ form.precio_min(class_='form-control form-control-sm', step='1', value=form.precio_min.data if form.precio_min.data is not none else '') }}
                 </div>
               </div>
               <div class="col-6">
                 <div class="input-icon">
                   <span class="icon"><i class="bi bi-currency-dollar"></i></span>
                   {{ form.precio_max.label }}
-                  {{ form.precio_max(class_='form-control form-control-sm', step='1') }}
+                  {{ form.precio_max(class_='form-control form-control-sm', step='1', value=form.precio_max.data if form.precio_max.data is not none else '') }}
                 </div>
               </div>
             </div>
@@ -157,8 +160,25 @@
                 </li>
               {% endfor %}
             </ul>
+          {% endif %}
+          <hr>
+          <div class="mb-2 fw-bold"></div>
+          {% if tareas_cliente and tareas_cliente|length > 0 %}
+            <ul class="list-group list-group-flush">
+              {% for tarea in tareas_cliente %}
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                  <div>
+                    <strong>{{ tarea.fecha.strftime('%d/%m/%Y') }}</strong>
+                    {% if tarea.hora %} {{ tarea.hora.strftime('%H:%M') }}{% endif %}:
+                    {{ tarea.comentario }}
+                    <span class="badge bg-secondary ms-2">{{ tarea.estado.replace('_', ' ').capitalize() }}</span>
+                  </div>
+                  <a href="{{ url_for('editar_tarea', tarea_id=tarea.id) }}" class="ms-2" title="Editar tarea"><i class="bi bi-pencil-square"></i></a>
+                </li>
+              {% endfor %}
+            </ul>
           {% else %}
-            <div class="text-muted">No hay actividad registrada para este cliente.</div>
+            <div class="text-muted">No hay tareas registradas para este cliente.</div>
           {% endif %}
         </div>
       </div>

@@ -28,7 +28,8 @@ class CrearClienteForm(FlaskForm):
         ('', 'No especificado'),
         ('inversor', 'Inversor'),
         ('comprador', 'Comprador'),
-        ('arrendatario', 'Arrendatario')
+        ('arrendatario', 'Arrendatario'),
+        ('vendedor', 'Vendedor')
     ])
     interes = SelectMultipleField('Interés en', choices=[
         ('vivienda', 'Vivienda'),
@@ -39,16 +40,16 @@ class CrearClienteForm(FlaskForm):
     ], option_widget=widgets.CheckboxInput(), widget=widgets.ListWidget(prefix_label=False))
     zonas = SelectMultipleField('Zonas', choices=[
         ('centro', 'Centro'),
-        ('norte', 'Norte'),
-        ('sur', 'Sur'),
-        ('este', 'Este'),
-        ('oeste', 'Oeste'),
-        ('periferia', 'Periferia'),
-        ('rural', 'Rural')
+        ('bodegones-sur', 'Bodegones-Sur'),
+        ('nueva ciudad', 'Nueva Ciudad'),
+        ('sindicales', 'Sindicales'),
+        ('maria aux', 'Maria Aux'),
+        ('adabias', 'Adabias'),
+        ('montealto', 'Montealto')
     ], option_widget=widgets.CheckboxInput(), widget=widgets.ListWidget(prefix_label=False))
     precio_min = IntegerField('Precio mínimo dispuesto a pagar')
     precio_max = IntegerField('Precio máximo dispuesto a pagar')
-    estado = SelectField('Estado', choices=[('en_curso', 'En curso'), ('finalizado', 'Finalizado'), ('descartado', 'Descartado')], default='en_curso')
+    estado = SelectField('Estado', choices=[('en_curso', 'En curso'),('pendiente', 'Standby'), ('finalizado', 'Finalizado')], default='en_curso')
     comercial_id = SelectField('Comercial habitual', coerce=int, choices=[])
     fecha_creacion = DateField('Fecha de alta', format='%Y-%m-%d', render_kw={'readonly': True})
     submit = SubmitField('Crear cliente')
@@ -63,7 +64,7 @@ class CrearTareaForm(FlaskForm):
     hora = SelectField('Hora', choices=hora_choices, validators=[DataRequired()])
     comentario = TextAreaField('Comentario')
     resolucion = TextAreaField('Resolución')
-    estado = SelectField('Estado', choices=[('por_hacer', 'Por hacer'), ('ha_comprado', 'Ha comprado'), ('ha_alquilado', 'Ha alquilado'), ('cancelado', 'Cancelado'), ('reagendada', 'Reagendada')], validators=[DataRequired()])
+    estado = SelectField('Estado', choices=[('por_hacer', 'Por hacer'), ('pendiente', 'Standby'), ('cancelado', 'Cancelado'), ('reagendada', 'Reagendada')], validators=[DataRequired()])
     submit = SubmitField('Crear tarea')
 
 class ResolverTareaForm(FlaskForm):
@@ -73,7 +74,7 @@ class ResolverTareaForm(FlaskForm):
     fecha = DateField('Fecha', validators=[DataRequired()])
     comentario = TextAreaField('Comentario')
     resolucion = TextAreaField('Resolución')
-    estado = SelectField('Estado', choices=[('por_hacer', 'Por hacer'), ('ha_comprado', 'Ha comprado'), ('ha_alquilado', 'Ha alquilado'), ('cancelado', 'Cancelado'), ('reagendada', 'Reagendada')], validators=[DataRequired()])
+    estado = SelectField('Estado', choices=[('por_hacer', 'Por hacer'), ('pendiente', 'Standby'), ('cancelado', 'Cancelado'), ('reagendada', 'Reagendada')], validators=[DataRequired()])
     submit = SubmitField('Resolver tarea')
 
 class CrearEventoForm(FlaskForm):

@@ -2,7 +2,59 @@
 {% block title %}Inversores{% endblock %}
 {% block content %}
 <h2 class="mb-3">Inversores</h2>
+<form id="form-filtros" method="get" class="mb-4" style="max-width:1000px;display:flex;gap:16px;align-items:end;flex-wrap:wrap;">
+  <div style="flex:1;min-width:200px;">
+    <label for="buscadorNombre">Buscar nombre:</label>
+    <input type="text" id="buscadorNombre" name="nombre" value="{{ request.args.get('nombre', '') }}" placeholder="Buscar por nombre..." class="form-control" style="min-width:180px;">
+  </div>
+  <div style="flex:1;min-width:200px;">
+    <label for="buscadorTelefono">Buscar teléfono:</label>
+    <input type="text" id="buscadorTelefono" name="telefono" value="{{ request.args.get('telefono', '') }}" placeholder="Buscar por teléfono..." class="form-control" style="min-width:180px;">
+  </div>
+  <div>
+    <label for="localidad">Localidad:</label>
+    <input type="text" id="localidad" name="localidad" value="{{ request.args.get('localidad', '') }}" class="form-control">
+  </div>
+  <div>
+    <label for="interes">Interés:</label>
+    <select name="interes" id="interes" class="form-select">
+      <option value="">Todos</option>
+      <option value="vivienda" {% if request.args.get('interes') == 'vivienda' %}selected{% endif %}>Vivienda</option>
+      <option value="local comercial" {% if request.args.get('interes') == 'local comercial' %}selected{% endif %}>Local comercial</option>
+      <option value="nave industrial" {% if request.args.get('interes') == 'nave industrial' %}selected{% endif %}>Nave industrial</option>
+      <option value="terreno" {% if request.args.get('interes') == 'terreno' %}selected{% endif %}>Terreno</option>
+      <option value="finca rustica" {% if request.args.get('interes') == 'finca rustica' %}selected{% endif %}>Finca rústica</option>
+    </select>
+  </div>
+  <div>
+    <label for="precio_min">Precio mínimo:</label>
+    <input type="number" id="precio_min" name="precio_min" value="{{ request.args.get('precio_min', '') }}" class="form-control" min="0">
+  </div>
+  <div>
+    <label for="precio_max">Precio máximo:</label>
+    <input type="number" id="precio_max" name="precio_max" value="{{ request.args.get('precio_max', '') }}" class="form-control" min="0">
+  </div>
+  <div>
+    <label for="zona">Zona:</label>
+    <select name="zona" id="zona" class="form-select">
+      <option value="">Todas</option>
+      <option value="centro" {% if request.args.get('zona') == 'centro' %}selected{% endif %}>Centro</option>
+      <option value="bodegones-sur" {% if request.args.get('zona') == 'bodegones-sur' %}selected{% endif %}>Bodegones-Sur</option>
+      <option value="nueva ciudad" {% if request.args.get('zona') == 'nueva ciudad' %}selected{% endif %}>Nueva Ciudad</option>
+      <option value="sindicales" {% if request.args.get('zona') == 'sindicales' %}selected{% endif %}>Sindicales</option>
+      <option value="maria aux" {% if request.args.get('zona') == 'maria aux' %}selected{% endif %}>Maria Aux</option>
+      <option value="adabias" {% if request.args.get('zona') == 'adabias' %}selected{% endif %}>Adabias</option>
+      <option value="montealto" {% if request.args.get('zona') == 'montealto' %}selected{% endif %}>Montealto</option>
+    </select>
+  </div>
+  <div style="align-self:center;">
+    <button type="submit" class="btn btn-primary">Filtrar</button>
+  </div>
+</form>
 <form id="form-mailing" method="post">
+<div class="mb-3">
+  <button type="button" class="btn btn-success" id="btn-difusion"><i class="bi bi-whatsapp"></i> Enviar difusión WhatsApp</button>
+</div>
 <div class="table-responsive">
 <table class="table table-hover align-middle shadow-sm bg-white rounded">
     <thead class="table-light">
@@ -15,8 +67,7 @@
             <th>Localidad</th>
             <th>Interés</th>
             <th>Rango de precios</th>
-            <th>Encuesta</th>
-            <th>Fecha de alta</th>
+            <th>WhatsApp</th>
             <th>Editar</th>
         </tr>
     </thead>
@@ -43,12 +94,17 @@
                 {% else %}-{% endif %}
             </td>
             <td>{{ cliente.precio_min }} - {{ cliente.precio_max }}</td>
-            <td><input type="checkbox" disabled {% if cliente.encuesta_enviada %}checked{% endif %}></td>
-            <td>{% if cliente.fecha_creacion %}{{ cliente.fecha_creacion.strftime('%d/%m/%Y') }}{% else %}-{% endif %}</td>
+            <td>
+              {% if cliente.telefono %}
+                <a href="https://wa.me/{{ cliente.telefono|replace(' ', '') }}" title="Enviar WhatsApp" class="btn btn-outline-success btn-sm whatsapp-btn" data-telefono="{{ cliente.telefono|replace(' ', '') }}" target="_blank">
+                  <i class="bi bi-whatsapp"></i>
+                </a>
+              {% endif %}
+            </td>
             <td><a href="/editar_cliente/{{ cliente.id }}" title="Editar cliente" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil-square"></i></a></td>
         </tr>
     {% else %}
-        <tr><td colspan="12"><em>No hay inversores registrados.</em></td></tr>
+        <tr><td colspan="10"><em>No hay inversores registrados.</em></td></tr>
     {% endfor %}
     </tbody>
 </table>
@@ -61,5 +117,26 @@ function toggleAll(source) {
     checkboxes[i].checked = source.checked;
   }
 }
+
+document.getElementById('btn-difusion').addEventListener('click', function() {
+  const seleccionados = Array.from(document.querySelectorAll('input[name="seleccionados"]:checked'));
+  if (seleccionados.length === 0) {
+    alert('Selecciona al menos un cliente para enviar la difusión.');
+    return;
+  }
+  const telefonos = seleccionados.map(cb => {
+    const row = cb.closest('tr');
+    return row.querySelector('td:nth-child(3)').textContent.trim().replace(/\s+/g, '');
+  }).filter(tel => tel);
+  if (telefonos.length === 0) {
+    alert('Ningún cliente seleccionado tiene teléfono.');
+    return;
+  }
+  // Generar enlaces de WhatsApp (uno por cliente)
+  telefonos.forEach(tel => {
+    const url = `https://wa.me/${tel}`;
+    window.open(url, '_blank');
+  });
+});
 </script>
 {% endblock %} 

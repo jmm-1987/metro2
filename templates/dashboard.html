@@ -120,18 +120,14 @@
             bgColor = '#fff';
             estadoColor = '#6c757d';
             estadoBadge = `<span class='badge bg-secondary'>Por hacer</span>`;
-          } else if (estado === 'Ha comprado') {
-            bgColor = '#e6f4ea';
-            estadoColor = '#198754';
-            estadoBadge = `<span class='badge bg-success'>Ha comprado</span>`;
-          } else if (estado === 'Ha alquilado') {
-            bgColor = '#e7f1fa';
-            estadoColor = '#0d6efd';
-            estadoBadge = `<span class='badge bg-primary'>Ha alquilado</span>`;
-          } else if (estado === 'Cancelado') {
+          } else if (estado === 'Standby' || estado === 'pendiente') {
+            bgColor = '#f7f7e6';
+            estadoColor = '#bfa134';
+            estadoBadge = `<span class='badge bg-warning text-dark'>Standby</span>`;
+          } else if (estado === 'Cancelado' || estado === 'Finalizado' || estado === 'finalizado') {
             bgColor = '#f8d7da';
             estadoColor = '#dc3545';
-            estadoBadge = `<span class='badge bg-danger'>Cancelado</span>`;
+            estadoBadge = `<span class='badge bg-danger'>Finalizado</span>`;
           } else if (estado === 'Reagendada' || estado === 'reagendada') {
             bgColor = '#fffbe6';
             estadoColor = '#bfa134';
@@ -145,7 +141,7 @@
           let whatsappBtn = '';
           if (telefono) {
             let telClean = telefono.replace(/[^\d]/g, '');
-            whatsappBtn = `<a href='https://wa.me/${telClean}' target='_blank' title='Enviar WhatsApp' class='btn btn-outline-success btn-sm' style='margin-left:2px;'><i class='bi bi-whatsapp'></i></a>`;
+            whatsappBtn = `<a href='https://wa.me/${telClean}' target='_blank' title='Enviar WhatsApp' class='btn btn-outline-success btn-sm whatsapp-btn' style='margin-left:2px;' onclick='event.stopPropagation(); event.preventDefault(); window.open(this.href, "_blank"); return false;'><i class='bi bi-whatsapp'></i></a>`;
           }
 
           let eventHtml = `

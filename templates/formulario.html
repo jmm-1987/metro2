@@ -311,6 +311,15 @@
                     `;
                 }
             });
+
+            // Autorrellenar el nombre si viene en la URL
+            window.addEventListener('DOMContentLoaded', function() {
+                const params = new URLSearchParams(window.location.search);
+                const nombre = params.get('nombre');
+                if (nombre) {
+                    document.getElementById('name').value = decodeURIComponent(nombre.replace(/\+/g, ' '));
+                }
+            });
         });
     </script>
 </body>

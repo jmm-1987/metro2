@@ -37,7 +37,7 @@ def dashboard():
     ).order_by(Tarea.fecha.asc(), Tarea.hora.asc()).all()
 
     tareas_por_hacer = [t for t in tareas if t.estado == 'por_hacer']
-    tareas_resueltas = [t for t in tareas if t.estado in ['ha_comprado', 'ha_alquilado', 'cancelado', 'reagendada']]
+    tareas_resueltas = [t for t in tareas if t.estado in ['pendiente', 'cancelado', 'reagendada']]
 
     clientes_list = Cliente.query.filter_by(estado='en_curso').order_by(Cliente.nombre.asc()).limit(15).all()
     now = datetime.datetime.now()
@@ -79,12 +79,18 @@ def buscar_clientes():
 @login_required
 def clientes():
     estado = request.args.get('estado')
+    tipo_cliente = request.args.get('tipo_cliente')
+    interes = request.args.get('interes')
     mostrar_inactivos = request.args.get('inactivos') == '1'
     query = Cliente.query
     if not mostrar_inactivos:
         query = query.filter_by(activo=True)
     if estado:
         query = query.filter_by(estado=estado)
+    if tipo_cliente:
+        query = query.filter_by(tipo_cliente=tipo_cliente)
+    if interes:
+        query = query.filter(Cliente.interes != None).filter(Cliente.interes.like(f"%{interes}%"))
     clientes = query.all()
     usuarios_dict = {u.id: u.nombre for u in Usuario.query.all()}
     return render_template('clientes.html', clientes=clientes, usuarios_dict=usuarios_dict)
@@ -141,7 +147,12 @@ def editar_cliente(cliente_id):
     cliente = Cliente.query.get_or_404(cliente_id)
     form = CrearClienteForm(obj=cliente)
     form.comercial_id.choices = [(0, 'Sin comercial')] + [(u.id, u.nombre) for u in Usuario.query.all()]
-    if request.method == 'POST' and form.validate_on_submit():
+    if request.method == 'GET':
+        form.comercial_id.data = cliente.comercial_id or 0
+        form.interes.data = cliente.interes.split(',') if cliente.interes else []
+        form.zonas.data = cliente.zonas.split(',') if cliente.zonas else []
+    tareas_cliente = cliente.tareas if hasattr(cliente, 'tareas') else []
+    if form.validate_on_submit():
         cliente.nombre = form.nombre.data
         cliente.email = form.email.data or None
         cliente.telefono = form.telefono.data
@@ -161,11 +172,7 @@ def editar_cliente(cliente_id):
         except Exception as e:
             db.session.rollback()
             flash('Error al actualizar cliente: {}'.format(str(e)))
-    if request.method == 'GET':
-        form.comercial_id.data = cliente.comercial_id or 0
-        form.interes.data = cliente.interes.split(',') if cliente.interes else []
-        form.zonas.data = cliente.zonas.split(',') if cliente.zonas else []
-    return render_template('editar_cliente.html', form=form, cliente=cliente)
+    return render_template('editar_cliente.html', form=form, cliente=cliente, tareas_cliente=tareas_cliente)
 
 @app.route('/crear_usuario', methods=['GET', 'POST'])
 @login_required
@@ -301,6 +308,17 @@ def editar_tarea(tarea_id):
             tarea.estado = estado_post
         else:
             tarea.estado = form.estado.data
+
+        # Modificar el estado del cliente según la acción
+        if tarea.cliente:
+            if tarea.estado == 'reagendada':
+                tarea.cliente.estado = 'en_curso'
+            elif tarea.estado == 'pendiente':
+                tarea.cliente.estado = 'pendiente'
+            elif tarea.estado == 'cancelado':
+                tarea.cliente.estado = 'finalizado'
+                tarea.cliente.activo = False
+
         try:
             db.session.commit()
             # Solo redirigir a crear_tarea si es reagendada y reagendar=1
@@ -344,7 +362,7 @@ def api_events():
     # Get Tareas
     tareas = Tarea.query.filter(Tarea.fecha >= start_date, Tarea.fecha < end_date).all()
     tareas_por_hacer = [t for t in tareas if t.estado == 'por_hacer']
-    tareas_resueltas = [t for t in tareas if t.estado in ['ha_comprado', 'ha_alquilado', 'cancelado', 'reagendada']]
+    tareas_resueltas = [t for t in tareas if t.estado in ['pendiente', 'cancelado', 'reagendada']]
 
     # Mostrar primero las por hacer
     for tarea in tareas_por_hacer:
@@ -448,14 +466,8 @@ def formulario():
 @app.route('/inversores')
 @login_required
 def inversores():
-    estado = request.args.get('estado')
-    localidad = request.args.get('localidad')
-    query = Cliente.query.filter_by(tipo_cliente='inversor')
-    if estado:
-        query = query.filter_by(estado=estado)
-    if localidad:
-        query = query.filter_by(localidad=localidad)
-    clientes = query.all()
+    # Mostrar todos los clientes en curso o standby, sin importar tipo_cliente
+    clientes = Cliente.query.filter(Cliente.estado.in_(['en_curso', 'pendiente'])).all()
     usuarios_dict = {u.id: u.nombre for u in Usuario.query.all()}
     return render_template('inversores.html', clientes=clientes, usuarios_dict=usuarios_dict)
 
@@ -534,7 +546,7 @@ def descargar_db():
     return send_file(
         'instance/database.db',
         as_attachment=True,
-        download_name='database.db'
+        download_name='metro2.db'
     )
 
 if __name__ == '__main__':

@@ -15,22 +15,13 @@
         <input type="text" id="buscadorTelefono" placeholder="Buscar por teléfono..." class="form-control" style="min-width:180px;">
     </div>
     <div>
-        <label for="estado">Estado:</label>
-        <select name="estado" id="estado" class="form-select" onchange="this.form.submit()">
-            <option value="" {% if not request.args.get('estado') %}{% endif %}>Todos</option>
-            <option value="en_curso" {% if request.args.get('estado', 'en_curso') == 'en_curso' %}selected{% endif %}>En curso</option>
-            <option value="ha_comprado" {% if request.args.get('estado') == 'ha_comprado' %}selected{% endif %}>Ha comprado</option>
-            <option value="cancelado" {% if request.args.get('estado') == 'cancelado' %}selected{% endif %}>Cancelado</option>
-            <option value="ha alquilado" {% if request.args.get('estado') == 'ha alquilado' %}selected{% endif %}>Ha alquilado</option>
-        </select>
-    </div>
-    <div>
         <label for="tipo_cliente">Tipo de cliente:</label>
         <select name="tipo_cliente" id="tipo_cliente" class="form-select" onchange="this.form.submit()">
             <option value="">Todos</option>
             <option value="inversor" {% if request.args.get('tipo_cliente') == 'inversor' %}selected{% endif %}>Inversor</option>
             <option value="comprador" {% if request.args.get('tipo_cliente') == 'comprador' %}selected{% endif %}>Comprador</option>
             <option value="arrendatario" {% if request.args.get('tipo_cliente') == 'arrendatario' %}selected{% endif %}>Arrendatario</option>
+            <option value="vendedor" {% if request.args.get('tipo_cliente') == 'vendedor' %}selected{% endif %}>Vendedor</option>
         </select>
     </div>
     <div>
@@ -44,16 +35,29 @@
             <option value="finca rustica" {% if request.args.get('interes') == 'finca rustica' %}selected{% endif %}>Finca rústica</option>
         </select>
     </div>
+    <div>
+        <label for="zona">Zona:</label>
+        <select name="zona" id="zona" class="form-select" onchange="this.form.submit()">
+            <option value="">Todas</option>
+            <option value="centro" {% if request.args.get('zona') == 'centro' %}selected{% endif %}>Centro</option>
+            <option value="bodegones-sur" {% if request.args.get('zona') == 'bodegones-sur' %}selected{% endif %}>Bodegones-Sur</option>
+            <option value="nueva ciudad" {% if request.args.get('zona') == 'nueva ciudad' %}selected{% endif %}>Nueva Ciudad</option>
+            <option value="sindicales" {% if request.args.get('zona') == 'sindicales' %}selected{% endif %}>Sindicales</option>
+            <option value="maria aux" {% if request.args.get('zona') == 'maria aux' %}selected{% endif %}>Maria Aux</option>
+            <option value="adabias" {% if request.args.get('zona') == 'adabias' %}selected{% endif %}>Adabias</option>
+            <option value="montealto" {% if request.args.get('zona') == 'montealto' %}selected{% endif %}>Montealto</option>
+        </select>
+    </div>
     <div style="align-self:center;">
         <div class="form-check">
             <input class="form-check-input" type="checkbox" value="1" id="mostrarInactivos" name="inactivos" onchange="this.form.submit()" {% if request.args.get('inactivos') == '1' %}checked{% endif %}>
             <label class="form-check-label" for="mostrarInactivos">
-                Mostrar clientes inactivos
+                Ver inactivos
             </label>
         </div>
     </div>
 </form>
-<div class="table-responsive">
+<div class="table-responsive" style="max-width:1600px; margin:auto;">
 <table class="table table-hover align-middle shadow-sm bg-white rounded">
     <thead class="table-light">
         <tr>
@@ -82,7 +86,9 @@
             <!-- <td>{{ cliente.email }}</td> -->
             <td>{{ cliente.telefono }}</td>
             <td>
-                <span class="badge bg-secondary">{{ cliente.estado.replace('_', ' ').capitalize() }}</span>
+                <span class="badge bg-secondary">
+                  {% if cliente.estado == 'pendiente' %}Standby{% else %}{{ cliente.estado.replace('_', ' ').capitalize() }}{% endif %}
+                </span>
             </td>
             <td>{{ cliente.comercial_id if not cliente.comercial_id else (usuarios_dict[cliente.comercial_id] if usuarios_dict and cliente.comercial_id in usuarios_dict else 'Sin asignar') }}</td>
             <td>{{ cliente.localidad or '-' }}</td>
@@ -105,10 +111,26 @@
                   {% endfor %}
                 {% else %}-{% endif %}
             </td>
-            <td>{{ cliente.precio_min }} - {{ cliente.precio_max }}</td>
+            <td>
+              {{ cliente.precio_min if cliente.precio_min is not none else 0 }} - {{ cliente.precio_max if cliente.precio_max is not none else 999999 }}
+            </td>
             <td><input type="checkbox" disabled {% if cliente.encuesta_enviada %}checked{% endif %}></td>
             <td>{% if cliente.fecha_creacion %}{{ cliente.fecha_creacion.strftime('%d/%m/%Y') }}{% else %}-{% endif %}</td>
-            <td><a href="/editar_cliente/{{ cliente.id }}" title="Editar cliente" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil-square"></i></a></td>
+            <td>
+              <div class="d-inline-flex align-items-center gap-1">
+                {% if cliente.telefono %}
+                  <a href="https://wa.me/{{ cliente.telefono|replace(' ', '') }}" title="Enviar WhatsApp" class="btn btn-outline-success btn-sm whatsapp-btn" data-telefono="{{ cliente.telefono|replace(' ', '') }}">
+                    <i class="bi bi-whatsapp"></i>
+                  </a>
+                  {% if not cliente.encuesta_enviada %}
+                    <a href="#" class="btn btn-outline-info btn-sm encuesta-btn" data-telefono="{{ cliente.telefono|replace(' ', '') }}" data-nombre="{{ cliente.nombre|urlencode }}" title="Enviar encuesta">
+                      <i class="bi bi-clipboard-check"></i> Enviar encuesta
+                    </a>
+                  {% endif %}
+                {% endif %}
+                <a href="/editar_cliente/{{ cliente.id }}" title="Editar cliente" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil-square"></i></a>
+              </div>
+            </td>
             <td>
                 <form method="POST" action="{{ url_for('toggle_cliente', cliente_id=cliente.id) }}" style="display:inline;">
                     <button type="submit" class="btn btn-sm {{ 'btn-danger' if cliente.activo else 'btn-success' }}" onclick="return confirm('¿Seguro que quieres {{ 'desactivar' if cliente.activo else 'activar' }} este cliente?');">
@@ -149,5 +171,42 @@ function filtrarClientes() {
 }
 document.getElementById('buscadorCliente').addEventListener('keyup', filtrarClientes);
 document.getElementById('buscadorTelefono').addEventListener('keyup', filtrarClientes);
+
+// Preferencia por WhatsApp Business si está disponible
+// Solo afecta a escritorio con app instalada
+// Requiere que el usuario permita popups
+const whatsappBtns = document.querySelectorAll('.whatsapp-btn');
+whatsappBtns.forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    const telefono = btn.getAttribute('data-telefono');
+    // Intentar abrir WhatsApp Business
+    const businessUrl = `whatsapp://send?phone=${telefono}`;
+    const personalUrl = `https://wa.me/${telefono}`;
+    // Probar primero con el protocolo de la app
+    window.open(businessUrl, '_blank');
+    // Fallback a web si no se abre la app
+    setTimeout(() => {
+      window.open(personalUrl, '_blank');
+    }, 500);
+  });
+});
+
+// Botón de enviar encuesta
+const encuestaBtns = document.querySelectorAll('.encuesta-btn');
+encuestaBtns.forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    const telefono = btn.getAttribute('data-telefono');
+    const nombre = btn.getAttribute('data-nombre');
+    const texto = encodeURIComponent(`encuesta https://metro2-9bxg.onrender.com/formulario?nombre=${nombre}`);
+    const businessUrl = `whatsapp://send?phone=${telefono}&text=${texto}`;
+    const personalUrl = `https://wa.me/${telefono}?text=${texto}`;
+    window.open(businessUrl, '_blank');
+    setTimeout(() => {
+      window.open(personalUrl, '_blank');
+    }, 500);
+  });
+});
 </script>
 {% endblock %} 
