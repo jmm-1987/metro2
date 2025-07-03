@@ -92,6 +92,13 @@ def clientes():
     if interes:
         query = query.filter(Cliente.interes != None).filter(Cliente.interes.like(f"%{interes}%"))
     clientes = query.all()
+    # Ordenar por fecha y hora de la última tarea (más reciente primero)
+    from datetime import datetime, time
+    def fecha_hora_ultima_tarea(cliente):
+        if cliente.tareas:
+            return max((datetime.combine(t.fecha, t.hora or time.min) for t in cliente.tareas if t.fecha), default=None)
+        return None
+    clientes.sort(key=lambda c: fecha_hora_ultima_tarea(c) or datetime.min, reverse=True)
     usuarios_dict = {u.id: u.nombre for u in Usuario.query.all()}
     return render_template('clientes.html', clientes=clientes, usuarios_dict=usuarios_dict)
 
@@ -250,11 +257,14 @@ def eventos():
 def crear_tarea():
     form = CrearTareaForm()
     form.usuario_id.choices = [(u.id, u.nombre) for u in Usuario.query.all()]
-    # Precargar usuario y cliente si vienen por GET
     if request.method == 'GET':
         usuario_id = request.args.get('usuario_id', type=int)
         cliente_id = request.args.get('cliente_id', type=int)
-        form.usuario_id.data = usuario_id if usuario_id else current_user.id
+        if current_user.nombre == 'Nazaret':
+            raul = Usuario.query.filter_by(nombre='Raul').first()
+            form.usuario_id.data = raul.id if raul else current_user.id
+        else:
+            form.usuario_id.data = usuario_id if usuario_id else current_user.id
         if cliente_id:
             cliente = Cliente.query.get(cliente_id)
             if cliente:
