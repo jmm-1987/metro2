@@ -214,7 +214,10 @@ def editar_usuario(usuario_id):
         return redirect(url_for('calendario'))
     usuario.email = usuario.email or ""
     usuario.telefono = usuario.telefono or ""
-    form = CrearUsuarioForm(obj=usuario)
+    if request.method == 'POST':
+        form = CrearUsuarioForm(request.form)
+    else:
+        form = CrearUsuarioForm(obj=usuario)
     if form.validate_on_submit():
         usuario.nombre = form.nombre.data
         usuario.es_admin = form.es_admin.data
@@ -553,10 +556,12 @@ def descargar_db():
     if not current_user.es_admin:
         flash('No tienes permiso para descargar la base de datos.')
         return redirect(url_for('dashboard'))
+    hoy = datetime.datetime.now().strftime('%d%m%Y')
+    nombre_archivo = f"metro2{hoy}.db"
     return send_file(
         'instance/database.db',
         as_attachment=True,
-        download_name='metro2.db'
+        download_name=nombre_archivo
     )
 
 if __name__ == '__main__':
