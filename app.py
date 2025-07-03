@@ -12,6 +12,7 @@ import datetime
 import smtplib
 from email.message import EmailMessage
 from models import db, Usuario, Cliente, Tarea, Evento, RespuestaFormulario
+from google_calendar import crear_evento_google_calendar
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'cambia_esto_por_un_valor_seguro'
@@ -288,6 +289,19 @@ def crear_tarea():
         db.session.add(tarea)
         try:
             db.session.commit()
+            # Crear evento en Google Calendar
+            try:
+                cliente_nombre = tarea.cliente.nombre if tarea.cliente else ''
+                cliente_telefono = tarea.cliente.telefono if tarea.cliente else ''
+                descripcion = f"Cliente: {cliente_nombre} ({cliente_telefono})\nResolución: {tarea.resolucion or ''}"
+                crear_evento_google_calendar(
+                    titulo=f"Tarea: {tarea.comentario}",
+                    descripcion=descripcion,
+                    fecha=str(tarea.fecha),
+                    hora=str(tarea.hora)[:5]  # formato HH:MM
+                )
+            except Exception as e:
+                print(f"Error al crear evento en Google Calendar: {e}")
             flash('Tarea creada correctamente')
             return redirect(url_for('dashboard'))
         except Exception as e:
