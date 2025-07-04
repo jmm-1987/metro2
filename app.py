@@ -13,6 +13,8 @@ import smtplib
 from email.message import EmailMessage
 from models import db, Usuario, Cliente, Tarea, Evento, RespuestaFormulario
 from google_calendar import crear_evento_google_calendar
+from enviar_email import enviar_email
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'cambia_esto_por_un_valor_seguro'
@@ -303,6 +305,17 @@ def crear_tarea():
             except Exception as e:
                 flash('La tarea se creó, pero no se pudo añadir a Google Calendar.', 'warning')
                 print(f"Error al crear evento en Google Calendar: {e}")
+            # Enviar email de notificación SIEMPRE
+            destinatario = "inmom2merida@gmail.com"
+            asunto = "Nueva tarea creada"
+            cuerpo = f"Se ha creado una nueva tarea para el cliente: {cliente_nombre} ({cliente_telefono})\nComentario: {tarea.comentario}\nFecha: {tarea.fecha} {tarea.hora}"
+            try:
+                print("Llamando a enviar_email...")
+                enviar_email(destinatario, asunto, cuerpo)
+                print("Llamada a enviar_email terminada")
+            except Exception as e:
+                flash(f"Error al enviar correo: {e}", "danger")
+                print(f"Error al enviar correo: {e}")
             flash('Tarea creada correctamente')
             return redirect(url_for('dashboard'))
         except Exception as e:
