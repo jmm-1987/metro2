@@ -306,7 +306,7 @@ def crear_tarea():
                 flash('La tarea se creó, pero no se pudo añadir a Google Calendar.', 'warning')
                 print(f"Error al crear evento en Google Calendar: {e}")
             # Enviar email de notificación SIEMPRE
-            destinatario = "inmom2merida@gmail.com"
+            destinatario = "rvazquez@m2merida.com"
             asunto = "Nueva tarea creada"
             cuerpo = f"Se ha creado una nueva tarea para el cliente: {cliente_nombre} ({cliente_telefono})\nComentario: {tarea.comentario}\nFecha: {tarea.fecha} {tarea.hora}"
             try:
