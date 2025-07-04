@@ -1,0 +1,6 @@
+Para agregar cuenta de google:
+Entrar en googl cloud y crear un proyecto
+dentro del proyecto ir a APIs y credenciales.
+Creamos los 3 tipos (API, auth y cuenta de servicio)
+Descargar json con la info para cargar en la variable de entorno
+Autorizar en el calendario a la cuenta de servicio a hacer cambios

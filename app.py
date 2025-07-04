@@ -301,6 +301,7 @@ def crear_tarea():
                     hora=str(tarea.hora)[:5]  # formato HH:MM
                 )
             except Exception as e:
+                flash('La tarea se creó, pero no se pudo añadir a Google Calendar.', 'warning')
                 print(f"Error al crear evento en Google Calendar: {e}")
             flash('Tarea creada correctamente')
             return redirect(url_for('dashboard'))
