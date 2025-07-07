@@ -305,23 +305,26 @@ def crear_tarea():
             except Exception as e:
                 flash('La tarea se creó, pero no se pudo añadir a Google Calendar.', 'warning')
                 print(f"Error al crear evento en Google Calendar: {e}")
-            # Enviar email de notificación SIEMPRE
+            # Enviar email de notificación SOLO si no es reagendada
+            es_reagendada = request.args.get('reagendada') == '1'
             destinatario = "rvazquez@m2merida.com"
             asunto = "Nueva tarea creada"
             cuerpo = f"Se ha creado una nueva tarea para el cliente: {cliente_nombre} ({cliente_telefono})\nComentario: {tarea.comentario}\nFecha: {tarea.fecha} {tarea.hora}"
-            try:
-                print("Llamando a enviar_email...")
-                enviar_email(destinatario, asunto, cuerpo)
-                print("Llamada a enviar_email terminada")
-            except Exception as e:
-                flash(f"Error al enviar correo: {e}", "danger")
-                print(f"Error al enviar correo: {e}")
+            if not es_reagendada:
+                try:
+                    print("Llamando a enviar_email...")
+                    enviar_email(destinatario, asunto, cuerpo)
+                    print("Llamada a enviar_email terminada")
+                except Exception as e:
+                    flash(f"Error al enviar correo: {e}", "danger")
+                    print(f"Error al enviar correo: {e}")
             flash('Tarea creada correctamente')
             return redirect(url_for('dashboard'))
         except Exception as e:
             db.session.rollback()
             flash('Error al crear tarea: {}'.format(str(e)))
-    return render_template('crear_tarea.html', form=form)
+    usuarios = Usuario.query.filter_by(activo=True).all()
+    return render_template('crear_tarea.html', form=form, current_user=current_user, usuarios=usuarios)
 
 @app.route('/editar_tarea/<int:tarea_id>', methods=['GET', 'POST'])
 @login_required
@@ -364,7 +367,7 @@ def editar_tarea(tarea_id):
             db.session.commit()
             # Solo redirigir a crear_tarea si es reagendada y reagendar=1
             if tarea.estado == 'reagendada' and request.args.get('reagendar') == '1':
-                return redirect(url_for('crear_tarea', cliente_id=tarea.cliente_id, usuario_id=tarea.usuario_id))
+                return redirect(url_for('crear_tarea', cliente_id=tarea.cliente_id, usuario_id=tarea.usuario_id, reagendada=1))
             # Para otros estados, simplemente redirigir al dashboard
             flash('Resolución de la tarea actualizada correctamente.')
             return redirect(url_for('dashboard'))
@@ -531,12 +534,13 @@ def crear_cliente_rapido():
     nombre = data.get('nombre', '').strip()
     localidad = data.get('localidad', '').strip()
     telefono = data.get('telefono', '').strip()
+    comercial_id = data.get('comercial_id')
     if not nombre or not localidad or not telefono:
         return jsonify({'success': False, 'error': 'Todos los campos son obligatorios'}), 400
     # Comprobar si el teléfono ya existe
     if Cliente.query.filter_by(telefono=telefono).first():
         return jsonify({'success': False, 'error': 'Ya existe un cliente con ese teléfono'}), 400
-    cliente = Cliente(nombre=nombre, localidad=localidad, telefono=telefono)
+    cliente = Cliente(nombre=nombre, localidad=localidad, telefono=telefono, comercial_id=comercial_id)
     db.session.add(cliente)
     try:
         db.session.commit()

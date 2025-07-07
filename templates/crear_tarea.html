@@ -99,6 +99,14 @@
             <label for="nuevo_telefono" class="form-label">Teléfono <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="nuevo_telefono" required>
           </div>
+          <div class="mb-3">
+            <label for="nuevo_comercial" class="form-label">Comercial <span class="text-danger">*</span></label>
+            <select class="form-select" id="nuevo_comercial" required>
+              {% for usuario in usuarios %}
+                <option value="{{ usuario.id }}" {% if usuario.id == current_user.id %}selected{% endif %}>{{ usuario.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
           <div id="error-crear-cliente-rapido" class="alert alert-danger d-none"></div>
           <button type="submit" class="btn btn-success w-100">Crear cliente</button>
         </form>
@@ -179,6 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const nombre = document.getElementById('nuevo_nombre').value.trim();
         const localidad = document.getElementById('nuevo_localidad').value.trim();
         const telefono = document.getElementById('nuevo_telefono').value.trim();
+        const comercial_id = document.getElementById('nuevo_comercial').value;
         const errorDiv = document.getElementById('error-crear-cliente-rapido');
         errorDiv.classList.add('d-none');
         errorDiv.textContent = '';
@@ -188,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({ nombre, localidad, telefono })
+            body: JSON.stringify({ nombre, localidad, telefono, comercial_id })
         })
         .then(res => res.json())
         .then(data => {
