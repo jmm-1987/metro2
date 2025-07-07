@@ -34,17 +34,19 @@ def load_user(user_id):
 @app.route('/')
 @login_required
 def dashboard():
-    tareas = Tarea.query.options(
-        joinedload(Tarea.usuario),
-        joinedload(Tarea.cliente)
-    ).order_by(Tarea.fecha.asc(), Tarea.hora.asc()).all()
+    if current_user.es_admin:
+        tareas = Tarea.query.options(joinedload(Tarea.usuario), joinedload(Tarea.cliente)).order_by(Tarea.fecha.asc(), Tarea.hora.asc()).all()
+        clientes_list = Cliente.query.filter_by(estado='en_curso').order_by(Cliente.nombre.asc()).limit(15).all()
+    else:
+        tareas = Tarea.query.options(joinedload(Tarea.usuario), joinedload(Tarea.cliente)).filter(Tarea.usuario_id == current_user.id).order_by(Tarea.fecha.asc(), Tarea.hora.asc()).all()
+        clientes_list = Cliente.query.filter_by(estado='en_curso', comercial_id=current_user.id).order_by(Cliente.nombre.asc()).limit(15).all()
 
     tareas_por_hacer = [t for t in tareas if t.estado == 'por_hacer']
     tareas_resueltas = [t for t in tareas if t.estado in ['pendiente', 'cancelado', 'reagendada']]
 
-    clientes_list = Cliente.query.filter_by(estado='en_curso').order_by(Cliente.nombre.asc()).limit(15).all()
     now = datetime.datetime.now()
-    return render_template('dashboard.html', tareas_por_hacer=tareas_por_hacer, tareas_resueltas=tareas_resueltas, clientes_list=clientes_list, now=now, es_admin=current_user.es_admin)
+    usuarios = Usuario.query.filter_by(activo=True).all() if current_user.es_admin else []
+    return render_template('dashboard.html', tareas_por_hacer=tareas_por_hacer, tareas_resueltas=tareas_resueltas, clientes_list=clientes_list, now=now, es_admin=current_user.es_admin, usuarios=usuarios)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -88,6 +90,8 @@ def clientes():
     query = Cliente.query
     if not mostrar_inactivos:
         query = query.filter_by(activo=True)
+    if not current_user.es_admin:
+        query = query.filter_by(comercial_id=current_user.id)
     if estado:
         query = query.filter_by(estado=estado)
     if tipo_cliente:
@@ -382,6 +386,7 @@ def api_events():
     start_str = request.args.get('start')
     end_str = request.args.get('end')
     mostrar_resueltas = request.args.get('mostrar_resueltas') == '1'
+    comercial_id = request.args.get('comercial_id', type=int)
 
     start_date = datetime.datetime.fromisoformat(start_str.split('T')[0]).date()
     end_date = datetime.datetime.fromisoformat(end_str.split('T')[0]).date()
@@ -404,7 +409,13 @@ def api_events():
         })
 
     # Get Tareas
-    tareas = Tarea.query.filter(Tarea.fecha >= start_date, Tarea.fecha < end_date).all()
+    if current_user.es_admin:
+        query = Tarea.query.filter(Tarea.fecha >= start_date, Tarea.fecha < end_date)
+        if comercial_id:
+            query = query.filter(Tarea.usuario_id == comercial_id)
+        tareas = query.all()
+    else:
+        tareas = Tarea.query.filter(Tarea.fecha >= start_date, Tarea.fecha < end_date, Tarea.usuario_id == current_user.id).all()
     tareas_por_hacer = [t for t in tareas if t.estado == 'por_hacer']
     tareas_resueltas = [t for t in tareas if t.estado in ['pendiente', 'cancelado', 'reagendada']]
 

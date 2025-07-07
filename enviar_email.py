@@ -13,7 +13,7 @@ def enviar_email(destinatario, asunto, cuerpo):
     #remitente = os.environ.get('EMAIL_REMITENTE')
     #password = os.environ.get('EMAIL_PASSWORD')
     remitente = 'jmurillo@alditraex.es'
-    password = 'Jm.b0642220'
+    password = 'Jm.b06422208'
     smtp_server = os.environ.get('EMAIL_SMTP_SERVER', 'smtp.ionos.es')
     smtp_port = int(os.environ.get('EMAIL_SMTP_PORT', 465))
 

@@ -88,7 +88,7 @@
                   {% if cliente.estado == 'pendiente' %}Standby{% else %}{{ cliente.estado.replace('_', ' ').capitalize() }}{% endif %}
                 </span>
             </td>
-            <td>{{ cliente.comercial_id if not cliente.comercial_id else (usuarios_dict[cliente.comercial_id] if usuarios_dict and cliente.comercial_id in usuarios_dict else 'Sin asignar') }}</td>
+            <td>{% if cliente.comercial_id and usuarios_dict and cliente.comercial_id in usuarios_dict %}{{ usuarios_dict[cliente.comercial_id] }}{% else %}{% endif %}</td>
             <td>{{ cliente.localidad or '-' }}</td>
             <td>
                 {% if cliente.tipo_cliente %}

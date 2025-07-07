@@ -5,6 +5,14 @@
   <div class="d-flex justify-content-end mb-2">
     <button id="toggle-resueltas" class="btn btn-outline-secondary btn-sm">Ver resueltas</button>
     <a href="{{ url_for('crear_tarea') }}" class="btn btn-primary btn-sm ms-2"><i class="bi bi-plus"></i> Crear tarea</a>
+    {% if es_admin %}
+    <select id="filtro-comercial" class="form-select form-select-sm ms-2" style="width:auto;display:inline-block;max-width:200px;">
+      <option value="">Todos los comerciales</option>
+      {% for usuario in usuarios %}
+        <option value="{{ usuario.id }}">{{ usuario.nombre }}</option>
+      {% endfor %}
+    </select>
+    {% endif %}
   </div>
   <div id='calendar' class="h-100"></div>
 </div>
@@ -55,6 +63,13 @@
         if (mostrarResueltas) {
           url += '&mostrar_resueltas=1';
         }
+        // Filtro de comercial solo para admin
+        {% if es_admin %}
+        const filtroComercial = document.getElementById('filtro-comercial');
+        if (filtroComercial && filtroComercial.value) {
+          url += '&comercial_id=' + filtroComercial.value;
+        }
+        {% endif %}
         fetch(url)
           .then(response => response.json())
           .then(data => successCallback(data))
@@ -236,6 +251,12 @@
         }
       }
     });
+
+    {% if es_admin %}
+    document.getElementById('filtro-comercial').addEventListener('change', function() {
+      calendar.refetchEvents();
+    });
+    {% endif %}
   });
 </script>
 <style>
