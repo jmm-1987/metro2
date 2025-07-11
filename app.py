@@ -114,7 +114,7 @@ def clientes():
 def usuarios():
     if not current_user.es_admin:
         flash('No tienes permiso para acceder a esta página.')
-        return redirect(url_for('calendario'))
+        return redirect(url_for('dashboard'))
     mostrar_inactivos = request.args.get('inactivos') == '1'
     query = Usuario.query
     if not mostrar_inactivos:
@@ -193,7 +193,7 @@ def editar_cliente(cliente_id):
 def crear_usuario():
     if not current_user.es_admin:
         flash('No tienes permiso para acceder a esta página.')
-        return redirect(url_for('calendario'))
+        return redirect(url_for('dashboard'))
     form = CrearUsuarioForm()
     if form.validate_on_submit():
         hashed_password = generate_password_hash(form.password.data)
@@ -218,7 +218,7 @@ def editar_usuario(usuario_id):
         return redirect(url_for('usuarios'))
     if not current_user.es_admin:
         flash('No tienes permiso para acceder a esta página.')
-        return redirect(url_for('calendario'))
+        return redirect(url_for('dashboard'))
     usuario.email = usuario.email or ""
     usuario.telefono = usuario.telefono or ""
     if request.method == 'POST':
@@ -242,25 +242,6 @@ def editar_usuario(usuario_id):
             flash('Error al actualizar usuario: {}'.format(str(e)))
     return render_template('editar_usuario.html', form=form, usuario=usuario)
 
-@app.route('/registros')
-@login_required
-def registros():
-    registros = Tarea.query.all()
-    return render_template('registros.html', registros=registros)
-
-@app.route('/calendario')
-@login_required
-def calendario():
-    hoy = datetime.date.today()
-    dos_semanas = hoy + datetime.timedelta(days=13)
-    eventos = Evento.query.filter(Evento.fecha >= hoy, Evento.fecha <= dos_semanas).all()
-    return render_template('calendario.html', eventos=eventos, hoy=hoy, dos_semanas=dos_semanas)
-
-@app.route('/eventos')
-@login_required
-def eventos():
-    eventos = Evento.query.order_by(Evento.fecha.asc()).all()
-    return render_template('eventos.html', eventos=eventos)
 
 @app.route('/crear_tarea', methods=['GET', 'POST'])
 @login_required
@@ -334,51 +315,69 @@ def crear_tarea():
 @login_required
 def editar_tarea(tarea_id):
     tarea = Tarea.query.get_or_404(tarea_id)
-    form = ResolverTareaForm(obj=tarea)
-    form.usuario_id.choices = [(u.id, u.nombre) for u in Usuario.query.all()]
-
-    if request.method == 'GET':
-        # Populate form with existing data
-        form.usuario_id.data = tarea.usuario_id
-        if tarea.cliente:
-            form.cliente_nombre.data = f"{tarea.cliente.nombre} ({tarea.cliente.telefono})"
+    modo = request.args.get('modo') or request.form.get('modo')
+    if modo == 'editar':
+        # Modo edición: usar CrearTareaForm
+        form = CrearTareaForm(obj=tarea)
+        form.usuario_id.choices = [(u.id, u.nombre) for u in Usuario.query.all()]
+        if request.method == 'GET':
+            form.usuario_id.data = tarea.usuario_id
             form.cliente_id.data = tarea.cliente_id
-            form.estado.data = tarea.estado
-
-    # Ocultar el select de estado en el template (solo usarlo para POST)
-    form.estado.render_kw = {'style': 'display:none;'}
-
-    if form.validate_on_submit():
-        tarea.resolucion = form.resolucion.data
-        # Si el usuario ha pulsado un botón de estado, usar ese valor
-        estado_post = request.form.get('estado')
-        if estado_post:
-            tarea.estado = estado_post
-        else:
-            tarea.estado = form.estado.data
-
-        # Modificar el estado del cliente según la acción
-        if tarea.cliente:
-            if tarea.estado == 'reagendada':
-                tarea.cliente.estado = 'en_curso'
-            elif tarea.estado == 'pendiente':
-                tarea.cliente.estado = 'pendiente'
-            elif tarea.estado == 'cancelado':
-                tarea.cliente.estado = 'finalizado'
-                tarea.cliente.activo = False
-
-        try:
-            db.session.commit()
-            # Solo redirigir a crear_tarea si es reagendada y reagendar=1
-            if tarea.estado == 'reagendada' and request.args.get('reagendar') == '1':
-                return redirect(url_for('crear_tarea', cliente_id=tarea.cliente_id, usuario_id=tarea.usuario_id, reagendada=1))
-            # Para otros estados, simplemente redirigir al dashboard
-            flash('Resolución de la tarea actualizada correctamente.')
-            return redirect(url_for('dashboard'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error al actualizar la tarea: {e}')
-    return render_template('editar_tarea.html', form=form, tarea=tarea)
+            form.cliente_nombre.data = f"{tarea.cliente.nombre} ({tarea.cliente.telefono})" if tarea.cliente else ''
+            form.fecha.data = tarea.fecha
+            form.hora.data = tarea.hora.strftime('%H:%M') if tarea.hora else None
+            form.comentario.data = tarea.comentario
+        if form.validate_on_submit():
+            tarea.fecha = form.fecha.data
+            from datetime import datetime
+            if isinstance(form.hora.data, str):
+                tarea.hora = datetime.strptime(form.hora.data, '%H:%M').time()
+            else:
+                tarea.hora = form.hora.data
+            tarea.comentario = form.comentario.data
+            try:
+                db.session.commit()
+                # Crear un nuevo evento en Google Calendar tras editar
+                from google_calendar import crear_evento_google_calendar_desde_tarea
+                try:
+                    crear_evento_google_calendar_desde_tarea(tarea)
+                except Exception as e:
+                    flash(f'La tarea se guardó, pero no se pudo crear el evento en Google Calendar: {e}', 'warning')
+                flash('Tarea actualizada correctamente.')
+                return redirect(url_for('dashboard'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error al actualizar la tarea: {e}')
+        tarea_resuelta = tarea.estado != 'por_hacer'
+        return render_template('editar_tarea.html', form=form, tarea=tarea, tarea_resuelta=tarea_resuelta, modo='editar')
+    else:
+        # Modo resolución: usar ResolverTareaForm
+        form = ResolverTareaForm(obj=tarea)
+        form.usuario_id.choices = [(u.id, u.nombre) for u in Usuario.query.all()]
+        if request.method == 'GET':
+            form.usuario_id.data = tarea.usuario_id
+            if tarea.cliente:
+                form.cliente_nombre.data = f"{tarea.cliente.nombre} ({tarea.cliente.telefono})"
+                form.cliente_id.data = tarea.cliente_id
+                form.estado.data = tarea.estado
+        form.estado.render_kw = {'style': 'display:none;'}
+        if form.validate_on_submit():
+            estado_post = request.form.get('estado')
+            if estado_post:
+                tarea.estado = estado_post
+                tarea.resolucion = form.resolucion.data
+            try:
+                db.session.commit()
+                if estado_post:
+                    if tarea.estado == 'reagendada' and request.args.get('reagendar') == '1':
+                        return redirect(url_for('crear_tarea', cliente_id=tarea.cliente_id, usuario_id=tarea.usuario_id, reagendada=1))
+                    flash('Resolución de la tarea actualizada correctamente.')
+                    return redirect(url_for('dashboard'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error al actualizar la tarea: {e}')
+        tarea_resuelta = tarea.estado != 'por_hacer'
+        return render_template('editar_tarea.html', form=form, tarea=tarea, tarea_resuelta=tarea_resuelta, modo='resolver')
 
 @app.route('/api/events')
 @login_required
@@ -471,9 +470,6 @@ def api_events():
             'title': evento.titulo,
             'start': event_start.isoformat(),
             'end': event_end.isoformat(),
-            'url': url_for('editar_evento', evento_id=evento.id),
-            'backgroundColor': evento.usuario.color if evento.usuario else '#6c757d',
-            'borderColor': evento.usuario.color if evento.usuario else '#6c757d',
             'extendedProps': {
                 'comercial': evento.usuario.nombre if evento.usuario else '',
                 'cliente': evento.cliente.nombre if evento.cliente else ''
@@ -481,31 +477,6 @@ def api_events():
         })
         
     return jsonify(events)
-
-@app.route('/editar_evento/<int:evento_id>', methods=['GET', 'POST'])
-@login_required
-def editar_evento(evento_id):
-    evento = Evento.query.get_or_404(evento_id)
-    form = CrearEventoForm(obj=evento)
-    form.usuario_id.choices = [(u.id, u.nombre) for u in Usuario.query.all()]
-    form.cliente_id.choices = [(c.id, c.nombre) for c in Cliente.query.all()]
-    if form.validate_on_submit():
-        evento.titulo = form.titulo.data
-        evento.fecha = form.fecha.data
-        evento.hora_inicio = form.hora_inicio.data
-        evento.hora_fin = form.hora_fin.data
-        evento.descripcion = form.descripcion.data
-        evento.usuario_id = form.usuario_id.data
-        evento.cliente_id = form.cliente_id.data
-        try:
-            db.session.commit()
-            flash('Evento actualizado correctamente')
-            return redirect(url_for('eventos'))
-        except Exception as e:
-            db.session.rollback()
-            flash('Error al actualizar evento: {}'.format(str(e)))
-
-    return render_template('editar_evento.html', form=form, evento=evento)
 
 @app.route('/respuestas_formulario')
 @login_required

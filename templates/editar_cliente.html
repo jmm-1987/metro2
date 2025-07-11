@@ -156,7 +156,8 @@
                   <div>
                     <strong>{{ registro.fecha.strftime('%d/%m/%Y') }}</strong>: {{ registro.comentario }}
                   </div>
-                  <a href="{{ url_for('editar_registro', registro_id=registro.id) }}" class="ms-2" title="Editar registro"><i class="bi bi-pencil-square"></i></a>
+                  {# Eliminar o comentar el enlace a editar_registro #}
+                  {# <a href="{{ url_for('editar_registro', registro_id=registro.id) }}" class="ms-2" title="Editar registro"><i class="bi bi-pencil-square"></i></a> #}
                 </li>
               {% endfor %}
             </ul>

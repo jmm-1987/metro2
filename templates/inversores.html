@@ -93,7 +93,7 @@ const clientes = [
     nombre: `{{ cliente.nombre|e }}`,
     telefono: `{{ cliente.telefono|e }}`,
     estado: `{{ cliente.estado|e }}`,
-    comercial: `{{ usuarios_dict[cliente.comercial_id]|e if usuarios_dict and cliente.comercial_id in usuarios_dict else 'Sin asignar' }}`,
+    comercial: `{{ usuarios_dict[cliente.comercial_id]|e if usuarios_dict and cliente.comercial_id in usuarios_dict else '' }}`,
     localidad: `{{ cliente.localidad|e if cliente.localidad else '' }}`,
     interes: `{{ cliente.interes|e if cliente.interes else '' }}`,
     precio_min: {{ cliente.precio_min if cliente.precio_min else 0 }},
