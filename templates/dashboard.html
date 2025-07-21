@@ -259,10 +259,39 @@
     {% endif %}
   });
 </script>
+
 <style>
 /* Ocultar la columna de horas en la vista semanal */
 .fc-timegrid-axis, .fc-timegrid-axis-frame { display: none !important; }
 .fc .fc-timegrid-slot-label { display: none !important; }
 .fc .fc-timegrid-col-frame { border-left: 1px solid #eee; }
+
+@media (max-width: 768px) {
+  .card.shadow.p-4.flex-grow-1 {
+    padding: 2rem 0.1rem !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  #calendar, .fc {
+    font-size: 1.7rem !important;
+  }
+  .fc-toolbar-title {
+    font-size: 2.1rem !important;
+  }
+  .btn, .btn-sm, .btn-primary, .btn-outline-secondary, .btn-outline-primary {
+    font-size: 1.7rem !important;
+    padding: 1.5rem 1.1rem !important;
+  }
+  .form-select, .form-select-sm {
+    font-size: 1.7rem !important;
+    padding: 1.2rem 1.1rem !important;
+  }
+  .fc-list-day-cushion, .fc-list-event-title, .fc-list-event-time {
+    font-size: 1.7rem !important;
+  }
+  .fc .fc-list-event {
+    min-height: 64px !important;
+  }
+}
 </style>
 {% endblock %} 
