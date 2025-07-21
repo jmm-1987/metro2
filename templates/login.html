@@ -2,31 +2,37 @@
 {% block title %}Entrar{% endblock %}
 {% block content %}
 <style>
-@media (max-width: 600px) {
+/* Estilos para móviles */
+@media (max-width: 768px) {
+  .login-form {
+    max-width: 100% !important;
+    padding: 1rem;
+  }
   .login-form label {
-    font-size: 1.25rem;
+    font-size: 1.5rem !important; /* Texto de etiquetas más grande */
+    margin-bottom: 0.5rem;
   }
   .login-form .form-control {
-    font-size: 1.25rem;
-    height: 3.2rem;
-    padding: 0.75rem 1rem;
+    font-size: 1.5rem !important; /* Texto dentro de los inputs más grande */
+    padding: 1rem 1.2rem !important; /* Relleno más grande */
+    height: auto !important; /* Altura automática para acomodar el texto */
   }
-  .login-form button {
-    font-size: 1.25rem;
-    padding: 0.9rem 0;
+  .login-form .btn {
+    font-size: 1.5rem !important; /* Texto del botón más grande */
+    padding: 1rem 0 !important; /* Relleno más grande */
   }
 }
 </style>
 <form method="POST" class="login-form" style="max-width:420px;margin:auto;">
     {{ form.hidden_tag() }}
-    <div class="mb-3">
+    <div class="mb-4">
         {{ form.nombre.label }}
         {{ form.nombre(class_='form-control') }}
     </div>
-    <div class="mb-3">
+    <div class="mb-4">
         {{ form.password.label }}
         {{ form.password(class_='form-control') }}
     </div>
-    <button type="submit" class="btn btn-primary w-100 mt-2">Entrar</button>
+    <button type="submit" class="btn btn-primary w-100 mt-3">Entrar</button>
 </form>
 {% endblock %} 
