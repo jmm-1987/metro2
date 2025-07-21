@@ -4,11 +4,13 @@
 <h2>Respuestas de formularios</h2>
 <div class="card-list">
   {% for r in respuestas %}
-    <div class="card">
-      <div class="mb-1"><span class="fw-bold">Cliente:</span> {{ clientes_dict[r.cliente_id] if r.cliente_id in clientes_dict else r.cliente_id }}</div>
+    <div class="card {% if r.puntuacion1 == 5 %}bg-success-subtle text-dark{% endif %}" style="border-left: 5px solid {% if r.puntuacion1 == 5 %}#28a745{% else %}#6c757d{% endif %};">
+      <div class="mb-1">
+        <span class="fw-bold">Cliente:</span> 
+        {% if r.puntuacion1 == 5 %}<i class="bi bi-star-fill text-warning me-1"></i>{% endif %}
+        {{ clientes_dict[r.cliente_id] if r.cliente_id in clientes_dict else r.cliente_id }}
+      </div>
       <div class="mb-1"><span class="fw-bold">Puntuación 1:</span> {{ r.puntuacion1 }}</div>
-      <div class="mb-1"><span class="fw-bold">Puntuación 2:</span> {{ r.puntuacion2 }}</div>
-      <div class="mb-1"><span class="fw-bold">Media:</span> {{ r.puntuacion_media }}</div>
       <div class="mb-1"><span class="fw-bold">Sugerencias:</span> {{ r.sugerencias or '-' }}</div>
       <div class="mb-1"><span class="fw-bold">Fecha:</span> {{ r.fecha.strftime('%d/%m/%Y %H:%M') }}</div>
     </div>

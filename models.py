@@ -64,7 +64,7 @@ class RespuestaFormulario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     cliente_id = db.Column(db.Integer, db.ForeignKey('cliente.id'), nullable=False)
     puntuacion1 = db.Column(db.Integer, nullable=False)
-    puntuacion2 = db.Column(db.Integer, nullable=False)
+    puntuacion2 = db.Column(db.Integer, nullable=True) # Hacer opcional
     puntuacion_media = db.Column(db.Float, nullable=False)
     sugerencias = db.Column(db.Text, nullable=True)
     fecha = db.Column(db.DateTime, nullable=False, default=datetime.utcnow) 

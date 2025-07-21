@@ -121,7 +121,7 @@
                     <i class="bi bi-whatsapp"></i>
                   </a>
                   {% if not cliente.encuesta_enviada %}
-                    <a href="#" class="btn btn-outline-info btn-sm encuesta-btn" data-telefono="{{ cliente.telefono|replace(' ', '') }}" data-nombre="{{ cliente.nombre|urlencode }}" title="Enviar encuesta">
+                    <a href="#" class="btn btn-outline-info btn-sm encuesta-btn" data-telefono="{{ cliente.telefono|replace(' ', '') }}" data-cliente-id="{{ cliente.id }}" title="Enviar encuesta">
                       <i class="bi bi-clipboard-check"></i> Enviar encuesta
                     </a>
                   {% endif %}
@@ -191,8 +191,9 @@ encuestaBtns.forEach(btn => {
   btn.addEventListener('click', function(e) {
     e.preventDefault();
     const telefono = btn.getAttribute('data-telefono');
-    const nombre = btn.getAttribute('data-nombre');
-    const texto = encodeURIComponent(`encuesta https://metro2-9bxg.onrender.com/formulario?nombre=${nombre}`);
+    const clienteId = btn.getAttribute('data-cliente-id');
+    //const texto = encodeURIComponent(`encuesta https://metro2-9bxg.onrender.com/formulario?cliente_id=${clienteId}`);
+    const texto = encodeURIComponent(`encuesta http://127.0.0.1:5000/formulario?cliente_id=${clienteId}`);
     const businessUrl = `whatsapp://send?phone=${telefono}&text=${texto}`;
     const personalUrl = `https://wa.me/${telefono}?text=${texto}`;
     window.open(businessUrl, '_blank');

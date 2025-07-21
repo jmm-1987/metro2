@@ -13,7 +13,7 @@
 <nav class="navbar navbar-expand-lg mb-4">
   <div class="container-fluid">
     <a class="navbar-brand d-flex align-items-center" href="/">
-      <img src="{{ url_for('static', filename='logoraul.png') }}" alt="Logo" style="height:70px;margin-right:18px;">
+      <img src="{{ url_for('static', filename='logoraul.png') }}" alt="Logo" style="height:90px;margin-right:18px;">
      
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,7 +67,7 @@
   </div>
 </nav>
 {% endif %}
-<div class="container-fluid flex-grow-1 d-flex flex-column px-4">
+<div class="flex-grow-1 d-flex flex-column px-4" style="width:100vw;">
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         <div class="alert alert-info">

@@ -34,7 +34,7 @@
         }
 
         #logo {
-            max-width: 200px;
+            max-width: 300px;
         }
 
         .yellow-band {
@@ -176,149 +176,118 @@
         </div>
     </div>
 
-    <div class="container">
-        <form id="ratingForm">
-            <h2 class="form-title">Formulario de valoración</h2>
-            <div class="form-group">
-                <label for="name">Nombre:</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-
-            <div class="form-group">
-                <label for="visitDate">Fecha de visita:</label>
-                <input type="date" id="visitDate" name="visitDate" required>
-            </div>
-
-            <div class="form-group">
-                <label>Atención recibida:</label>
-                <div class="star-rating">
-                    <i class="fas fa-star" data-rating="1"></i>
-                    <i class="fas fa-star" data-rating="2"></i>
-                    <i class="fas fa-star" data-rating="3"></i>
-                    <i class="fas fa-star" data-rating="4"></i>
-                    <i class="fas fa-star" data-rating="5"></i>
+    <div class="container my-5">
+        <h1 class="text-center mb-4">Encuesta de Satisfacción</h1>
+        <form id="satisfaction-form" class="shadow p-4 rounded bg-light">
+            <div class="mb-4">
+                <label class="form-label">Valora la atención recibida:</label>
+                <div id="rating-atencion" class="star-rating">
+                    <i class="fas fa-star" data-value="1"></i>
+                    <i class="fas fa-star" data-value="2"></i>
+                    <i class="fas fa-star" data-value="3"></i>
+                    <i class="fas fa-star" data-value="4"></i>
+                    <i class="fas fa-star" data-value="5"></i>
                 </div>
-                <input type="hidden" id="attentionRating" name="attentionRating" required>
+                <input type="hidden" name="puntuacion1" id="puntuacion1" required>
             </div>
-
-            <div class="form-group">
-                <label>Tiempo de respuesta:</label>
-                <div class="star-rating">
-                    <i class="fas fa-star" data-rating="1"></i>
-                    <i class="fas fa-star" data-rating="2"></i>
-                    <i class="fas fa-star" data-rating="3"></i>
-                    <i class="fas fa-star" data-rating="4"></i>
-                    <i class="fas fa-star" data-rating="5"></i>
-                </div>
-                <input type="hidden" id="responseRating" name="responseRating" required>
+            <input type="hidden" name="cliente_id" id="cliente_id">
+            <div class="mb-4">
+                <label for="sugerencias" class="form-label">Por favor, cuéntenos brevemente por qué eligió esta valoración:</label>
+                <textarea class="form-control" id="sugerencias" name="sugerencias" rows="3"></textarea>
             </div>
-
-            <div class="form-group">
-                <label for="suggestion">Sugerencia de mejora:</label>
-                <textarea id="suggestion" name="suggestion" rows="4"></textarea>
+            <div class="mb-4" style="margin-bottom: 32px;">
+                <label for="fecha_visita" class="form-label">Fecha:</label>
+                <input type="date" class="form-control" id="fecha_visita" name="fecha_visita">
             </div>
-
-            <button type="submit">Enviar valoración</button>
+            <div class="text-center" style="margin-top: 32px;">
+                <button type="submit" class="btn btn-primary">Enviar Encuesta</button>
+            </div>
         </form>
+        <div id="thank-you-message" style="display:none; text-align:center; padding: 40px;">
+            <h3><b>¡Gracias por ayudarnos a construir un mejor servicio!</b></h3>
+            <p>En inmobiliaria Metro Cuadrado cada opinión es como un ladrillo que nos permite edificar una mejor experiencia. Gracias por completar nuestra encuesta.</p>
+            <p>Tu voz cuenta, y con ella ¡construimos juntos el crecimiento de esta inmobiliaria!</p>
+            <a href="https://www.m2merida.com/" style="display: inline-block; background-color: #c7a962; color: #23211e; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; border: 1px solid #b89a4c; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s ease-in-out;" onmouseover="this.style.backgroundColor='#b89a4c'; this.style.transform='translateY(-1px)';" onmouseout="this.style.backgroundColor='#c7a962'; this.style.transform='translateY(0)';">Terminar</a>
+        </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('visitDate').value = today;
+        document.addEventListener('DOMContentLoaded', function() {
+            // Capturar cliente_id de la URL
+            var params = new URLSearchParams(window.location.search);
+            var clienteId = params.get('cliente_id');
+            if (clienteId) {
+                document.getElementById('cliente_id').value = clienteId;
+            }
 
-            function setupStarRating(starContainer, hiddenInput) {
-                const stars = starContainer.querySelectorAll('.fa-star');
+            // Fecha por defecto
+            var hoy = new Date();
+            var yyyy = hoy.getFullYear();
+            var mm = String(hoy.getMonth() + 1).padStart(2, '0');
+            var dd = String(hoy.getDate()).padStart(2, '0');
+            document.getElementById('fecha_visita').value = yyyy + '-' + mm + '-' + dd;
 
-                stars.forEach(star => {
-                    star.addEventListener('click', function () {
-                        const rating = this.getAttribute('data-rating');
-                        hiddenInput.value = rating;
-                        stars.forEach(s => {
-                            if (s.getAttribute('data-rating') <= rating) {
-                                s.classList.add('active');
-                            } else {
-                                s.classList.remove('active');
-                            }
-                        });
-                    });
-
-                    star.addEventListener('mouseover', function () {
-                        const rating = this.getAttribute('data-rating');
-                        stars.forEach(s => {
-                            s.style.color = s.getAttribute('data-rating') <= rating ? '#FFD700' : '#ddd';
-                        });
-                    });
-
-                    star.addEventListener('mouseout', function () {
-                        const currentRating = hiddenInput.value;
-                        stars.forEach(s => {
-                            s.style.color = s.getAttribute('data-rating') <= currentRating ? '#FFD700' : '#ddd';
-                        });
+            // Lógica de las estrellas
+            var stars = document.querySelectorAll('#rating-atencion .fa-star');
+            var hiddenInput = document.getElementById('puntuacion1');
+            stars.forEach(function(star, idx) {
+                star.addEventListener('mouseover', function() {
+                    stars.forEach(function(s, i) {
+                        s.classList.toggle('selected', i <= idx);
                     });
                 });
-            }
-
-            setupStarRating(document.querySelectorAll('.star-rating')[0], document.getElementById('attentionRating'));
-            setupStarRating(document.querySelectorAll('.star-rating')[1], document.getElementById('responseRating'));
-
-            async function submitToGoogleSheets(formData) {
-                try {
-                    await fetch('https://script.google.com/macros/s/AKfycbwwkg3vnQvcIdgIldg3O5A_niiXFcyNRt6XjfULbcwlgMQ1bwT9oUJ4ogTE9BemeBNy/exec', {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(formData)
+                star.addEventListener('mouseout', function() {
+                    var val = parseInt(hiddenInput.value) || 0;
+                    stars.forEach(function(s, i) {
+                        s.classList.toggle('selected', i < val);
                     });
-                    return true;
-                } catch (error) {
-                    console.error('Error al enviar datos:', error);
-                    return false;
-                }
-            }
+                });
+                star.addEventListener('click', function() {
+                    hiddenInput.value = idx + 1;
+                    stars.forEach(function(s, i) {
+                        s.classList.toggle('selected', i <= idx);
+                    });
+                });
+            });
+            // Inicializar sin selección
+            stars.forEach(function(s) { s.classList.remove('selected'); });
 
-            document.getElementById('ratingForm').addEventListener('submit', async function (e) {
-                e.preventDefault();
+            document.getElementById('satisfaction-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                const clienteId = document.getElementById('cliente_id').value;
+                const puntuacion1 = document.getElementById('puntuacion1').value;
+                const sugerencias = document.getElementById('sugerencias').value;
+                const fechaVisita = document.getElementById('fecha_visita').value;
 
-                const name = document.getElementById('name').value;
-                const attentionRating = document.getElementById('attentionRating').value;
-                const responseRating = document.getElementById('responseRating').value;
-
-                if (!name || !attentionRating || !responseRating) {
-                    alert('Por favor, completa todos los campos requeridos');
+                if (!puntuacion1) {
+                    alert('Por favor, valora la atención recibida.');
                     return;
                 }
 
-                const formData = {
-                    nombre: name,
-                    fechaVisita: document.getElementById('visitDate').value,
-                    atencionRecibida: attentionRating,
-                    tiempoRespuesta: responseRating,
-                    sugerencia: document.getElementById('suggestion').value,
-                    timestamp: new Date().toISOString()
-                };
-
-                const success = await submitToGoogleSheets(formData);
-
-                if (parseInt(attentionRating) === 5 && parseInt(responseRating) === 5) {
-                    window.location.href = 'https://g.page/r/CdkfTf1l_JOeEBM/review';
-                } else {
-                    document.querySelector('.container').innerHTML = `
-                        <div class="thank-you-page">
-                            <h1>¡Gracias por tu valoración!</h1>
-                            <p>Tu opinión es muy importante para nosotros. Trabajaremos para mejorar nuestros servicios.</p>
-                        </div>
-                    `;
-                }
-            });
-
-            // Autorrellenar el nombre si viene en la URL
-            window.addEventListener('DOMContentLoaded', function() {
-                const params = new URLSearchParams(window.location.search);
-                const nombre = params.get('nombre');
-                if (nombre) {
-                    document.getElementById('name').value = decodeURIComponent(nombre.replace(/\+/g, ' '));
-                }
+                // Enviar los datos al servidor
+                fetch('/api/guardar_encuesta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        cliente_id: clienteId,
+                        puntuacion1: puntuacion1,
+                        sugerencias: sugerencias,
+                        fecha: fechaVisita
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (parseInt(puntuacion1) === 5) {
+                            window.location.href = 'https://g.page/r/CdkfTf1l_JOeEBM/review';
+                        } else {
+                            document.getElementById('satisfaction-form').style.display = 'none';
+                            document.getElementById('thank-you-message').style.display = 'block';
+                        }
+                    } else {
+                        alert('Error al guardar la encuesta: ' + data.error);
+                    }
+                });
             });
         });
     </script>

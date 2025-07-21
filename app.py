@@ -578,6 +578,43 @@ def descargar_db():
         download_name=nombre_archivo
     )
 
+@app.route('/api/guardar_encuesta', methods=['POST'])
+def guardar_encuesta():
+    data = request.get_json()
+    cliente_id = data.get('cliente_id')
+    puntuacion1 = data.get('puntuacion1')
+    sugerencias = data.get('sugerencias')
+
+    if not cliente_id or not puntuacion1:
+        return jsonify({'success': False, 'error': 'Faltan datos obligatorios'}), 400
+
+    cliente = Cliente.query.get(cliente_id)
+    if not cliente:
+        return jsonify({'success': False, 'error': 'Cliente no encontrado'}), 404
+
+    # Calcular puntuación media (si hubiera más de una)
+    puntuacion_media = float(puntuacion1)
+
+    respuesta = RespuestaFormulario(
+        cliente_id=cliente_id,
+        puntuacion1=puntuacion1,
+        puntuacion_media=puntuacion_media,
+        sugerencias=sugerencias,
+        fecha=datetime.datetime.strptime(data.get('fecha'), '%Y-%m-%d') if data.get('fecha') else datetime.datetime.utcnow()
+    )
+    
+    # Marcar la encuesta como enviada en el cliente
+    cliente.encuesta_enviada = True
+    
+    db.session.add(respuesta)
+    try:
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()

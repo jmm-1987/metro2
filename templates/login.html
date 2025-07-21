@@ -1,7 +1,23 @@
 {% extends 'base.html' %}
 {% block title %}Entrar{% endblock %}
 {% block content %}
-<form method="POST" style="max-width:420px;margin:auto;">
+<style>
+@media (max-width: 600px) {
+  .login-form label {
+    font-size: 1.25rem;
+  }
+  .login-form .form-control {
+    font-size: 1.25rem;
+    height: 3.2rem;
+    padding: 0.75rem 1rem;
+  }
+  .login-form button {
+    font-size: 1.25rem;
+    padding: 0.9rem 0;
+  }
+}
+</style>
+<form method="POST" class="login-form" style="max-width:420px;margin:auto;">
     {{ form.hidden_tag() }}
     <div class="mb-3">
         {{ form.nombre.label }}
