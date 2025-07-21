@@ -10,7 +10,7 @@
         {% if r.puntuacion1 == 5 %}<i class="bi bi-star-fill text-warning me-1"></i>{% endif %}
         {{ clientes_dict[r.cliente_id] if r.cliente_id in clientes_dict else r.cliente_id }}
       </div>
-      <div class="mb-1"><span class="fw-bold">Puntuación 1:</span> {{ r.puntuacion1 }}</div>
+      <div class="mb-1"><span class="fw-bold">Puntuación:</span> {{ r.puntuacion1 }}</div>
       <div class="mb-1"><span class="fw-bold">Sugerencias:</span> {{ r.sugerencias or '-' }}</div>
       <div class="mb-1"><span class="fw-bold">Fecha:</span> {{ r.fecha.strftime('%d/%m/%Y %H:%M') }}</div>
     </div>

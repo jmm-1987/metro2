@@ -193,7 +193,7 @@ encuestaBtns.forEach(btn => {
     const telefono = btn.getAttribute('data-telefono');
     const clienteId = btn.getAttribute('data-cliente-id');
     const texto = encodeURIComponent(`encuesta https://metro2-9bxg.onrender.com/formulario?cliente_id=${clienteId}`);
-   // const texto = encodeURIComponent(`encuesta http://127.0.0.1:5000/formulario?cliente_id=${clienteId}`);
+    //const texto = encodeURIComponent(`encuesta http://127.0.0.1:5000/formulario?cliente_id=${clienteId}`);
     const businessUrl = `whatsapp://send?phone=${telefono}&text=${texto}`;
     const personalUrl = `https://wa.me/${telefono}?text=${texto}`;
     window.open(businessUrl, '_blank');

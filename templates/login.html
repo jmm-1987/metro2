@@ -2,24 +2,41 @@
 {% block title %}Entrar{% endblock %}
 {% block content %}
 <style>
+.login-form {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+  padding: 2.2rem 2rem 2rem 2rem;
+  margin-top: 7vh;
+  margin-bottom: 7vh;
+}
 /* Estilos para móviles */
 @media (max-width: 768px) {
   .login-form {
-    max-width: 100% !important;
-    padding: 1rem;
+    width: 95vw !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    align-self: center !important;
+    flex-shrink: 0 !important;
+    position: relative;
+    z-index: 2;
+    padding: 2.2rem 1.2rem 2rem 1.2rem;
+    margin-top: 10vw;
+    margin-bottom: 10vw;
   }
   .login-form label {
-    font-size: 1.5rem !important; /* Texto de etiquetas más grande */
-    margin-bottom: 0.5rem;
+    font-size: 1.7rem !important;
+    margin-bottom: 0.9rem;
   }
   .login-form .form-control {
-    font-size: 1.5rem !important; /* Texto dentro de los inputs más grande */
-    padding: 1rem 1.2rem !important; /* Relleno más grande */
-    height: auto !important; /* Altura automática para acomodar el texto */
+    font-size: 1.7rem !important;
+    padding: 1.3rem 1.2rem !important;
+    height: auto !important;
   }
   .login-form .btn {
-    font-size: 1.5rem !important; /* Texto del botón más grande */
-    padding: 1rem 0 !important; /* Relleno más grande */
+    font-size: 1.7rem !important;
+    padding: 1.3rem 0 !important;
   }
 }
 </style>

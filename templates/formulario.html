@@ -158,6 +158,11 @@
             font-weight: 700;
             letter-spacing: 0.5px;
         }
+        @media (max-width: 600px) {
+            .star-rating {
+                font-size: 2.5rem;
+            }
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -232,6 +237,12 @@
             var stars = document.querySelectorAll('#rating-atencion .fa-star');
             var hiddenInput = document.getElementById('puntuacion1');
             stars.forEach(function(star, idx) {
+                function marcarEstrellas(index) {
+                    hiddenInput.value = index + 1;
+                    stars.forEach(function(s, i) {
+                        s.classList.toggle('selected', i <= index);
+                    });
+                }
                 star.addEventListener('mouseover', function() {
                     stars.forEach(function(s, i) {
                         s.classList.toggle('selected', i <= idx);
@@ -243,12 +254,15 @@
                         s.classList.toggle('selected', i < val);
                     });
                 });
-                star.addEventListener('click', function() {
-                    hiddenInput.value = idx + 1;
-                    stars.forEach(function(s, i) {
-                        s.classList.toggle('selected', i <= idx);
-                    });
+                star.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    marcarEstrellas(idx);
                 });
+                star.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    marcarEstrellas(idx);
+                }, {passive: false});
             });
             // Inicializar sin selección
             stars.forEach(function(s) { s.classList.remove('selected'); });
