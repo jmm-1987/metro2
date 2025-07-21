@@ -1,19 +1,34 @@
 {% extends 'base.html' %}
 {% block title %}Entrar{% endblock %}
 {% block content %}
+<div class="d-flex justify-content-center align-items-center" style="min-height:90vh;width:100vw;">
+  <form method="POST" class="login-form" style="background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.13);padding:2.7rem 2.2rem 2.2rem 2.2rem;width:100%;max-width:540px;">
+      {{ form.hidden_tag() }}
+      <div class="mb-4">
+          {{ form.nombre.label }}
+          {{ form.nombre(class_='form-control form-control-lg') }}
+      </div>
+      <div class="mb-4">
+          {{ form.password.label }}
+          {{ form.password(class_='form-control form-control-lg') }}
+      </div>
+      <button type="submit" class="btn btn-primary w-100 mt-3" style="font-size:1.4rem;padding:1.1rem 0;">Entrar</button>
+  </form>
+</div>
 <style>
-.login-form {
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
-  padding: 2.2rem 2rem 2rem 2rem;
-  margin-top: 7vh;
-  margin-bottom: 7vh;
+.login-form label {
+  font-size: 1.25rem;
+  margin-bottom: 0.7rem;
 }
-/* Estilos para móviles */
+/* Eliminar padding lateral del contenedor padre en móvil solo en login */
 @media (max-width: 768px) {
+  body > .flex-grow-1.px-4 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100vw !important;
+  }
   .login-form {
-    width: 95vw !important;
+    width: 100vw !important;
     max-width: none !important;
     min-width: 0 !important;
     box-sizing: border-box !important;
@@ -21,35 +36,23 @@
     flex-shrink: 0 !important;
     position: relative;
     z-index: 2;
-    padding: 2.2rem 1.2rem 2rem 1.2rem;
-    margin-top: 10vw;
-    margin-bottom: 10vw;
+    padding: 2.7rem 0.5rem 2.2rem 0.5rem;
+    margin-top: 5vw;
+    margin-bottom: 5vw;
   }
   .login-form label {
-    font-size: 1.7rem !important;
-    margin-bottom: 0.9rem;
+    font-size: 2rem !important;
+    margin-bottom: 1.1rem;
   }
   .login-form .form-control {
-    font-size: 1.7rem !important;
-    padding: 1.3rem 1.2rem !important;
+    font-size: 2rem !important;
+    padding: 1.6rem 1.2rem !important;
     height: auto !important;
   }
   .login-form .btn {
-    font-size: 1.7rem !important;
-    padding: 1.3rem 0 !important;
+    font-size: 2rem !important;
+    padding: 1.6rem 0 !important;
   }
 }
 </style>
-<form method="POST" class="login-form" style="max-width:420px;margin:auto;">
-    {{ form.hidden_tag() }}
-    <div class="mb-4">
-        {{ form.nombre.label }}
-        {{ form.nombre(class_='form-control') }}
-    </div>
-    <div class="mb-4">
-        {{ form.password.label }}
-        {{ form.password(class_='form-control') }}
-    </div>
-    <button type="submit" class="btn btn-primary w-100 mt-3">Entrar</button>
-</form>
 {% endblock %} 
