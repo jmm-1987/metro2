@@ -27,6 +27,11 @@
           {{ form.telefono.label }}
           {{ form.telefono(class_='form-control') }}
       </div>
+      <div class="input-icon mb-3">
+          <span class="icon"><i class="bi bi-telegram"></i></span>
+          {{ form.chat_id_telegram.label }}
+          {{ form.chat_id_telegram(class_='form-control') }}
+      </div>
       <hr class="decor-sep">
       <div class="mb-3">
           {{ form.es_admin() }} {{ form.es_admin.label }}
@@ -34,6 +39,12 @@
       <div class="form-group mb-3">
         {{ form.color.label }}
         {{ form.color(class_='form-control', type='color') }}
+      </div>
+      <div class="mb-3">
+        {{ form.notificar_email() }} {{ form.notificar_email.label }}
+      </div>
+      <div class="mb-3">
+        {{ form.notificar_telegram() }} {{ form.notificar_telegram.label }}
       </div>
       <button type="submit" class="btn btn-success w-100 mt-2">Crear usuario</button>
   </form>

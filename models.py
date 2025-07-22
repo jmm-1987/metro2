@@ -14,6 +14,9 @@ class Usuario(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=True)
     telefono = db.Column(db.String(20), unique=True, nullable=True)
     activo = db.Column(db.Boolean, default=True)  # Nuevo campo para desactivar usuario
+    notificar_email = db.Column(db.Boolean, default=True)
+    notificar_telegram = db.Column(db.Boolean, default=False)
+    chat_id_telegram = db.Column(db.String(32), nullable=True)
     # Relación con Evento - backref crea 'usuario' en Evento
     eventos = db.relationship('Evento', backref='usuario', lazy=True)
     tareas = db.relationship('Tarea', back_populates='usuario')

@@ -11,11 +11,14 @@ class LoginForm(FlaskForm):
 
 class CrearUsuarioForm(FlaskForm):
     nombre = StringField('Usuario', validators=[DataRequired(), Length(min=3, max=80)])
-    password = PasswordField('Contraseña', validators=[Length(min=6)])
+    password = PasswordField('Contraseña', validators=[Optional(), Length(min=6)])
     email = StringField('Email', validators=[Email(), Length(max=120)])
     telefono = StringField('Teléfono', validators=[Length(max=20)])
     es_admin = BooleanField('Administrador')
     color = StringField('Color para el calendario')
+    notificar_email = BooleanField('Notificar por email')
+    notificar_telegram = BooleanField('Notificar por telegram')
+    chat_id_telegram = StringField('Chat ID de Telegram')
     submit = SubmitField('Crear usuario')
 
 class CrearClienteForm(FlaskForm):

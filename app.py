@@ -5,7 +5,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import LoginForm, CrearUsuarioForm, CrearClienteForm, CrearTareaForm, CrearEventoForm, ResolverTareaForm
-from wtforms import StringField, DateField, SelectField
+from wtforms import StringField, DateField, SelectField, BooleanField
 from flask_wtf import FlaskForm
 from wtforms.validators import DataRequired
 import datetime
@@ -15,6 +15,10 @@ from models import db, Usuario, Cliente, Tarea, Evento, RespuestaFormulario
 from google_calendar import crear_evento_google_calendar
 from enviar_email import enviar_email
 import os
+from enviar_telegram import enviar_telegram
+
+# Cargar el token una vez al arrancar la app
+TOKEN_TELEGRAM = os.environ.get('TELEGRAM_BOT_TOKEN')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'cambia_esto_por_un_valor_seguro'
@@ -197,7 +201,17 @@ def crear_usuario():
     form = CrearUsuarioForm()
     if form.validate_on_submit():
         hashed_password = generate_password_hash(form.password.data)
-        usuario = Usuario(nombre=form.nombre.data, password=hashed_password, es_admin=form.es_admin.data, color=form.color.data)
+        usuario = Usuario(
+            nombre=form.nombre.data,
+            password=hashed_password,
+            es_admin=form.es_admin.data,
+            color=form.color.data,
+            email=form.email.data or None,
+            telefono=form.telefono.data or None,
+            chat_id_telegram=form.chat_id_telegram.data or None,
+            notificar_email=form.notificar_email.data,
+            notificar_telegram=form.notificar_telegram.data
+        )
         db.session.add(usuario)
         try:
             db.session.commit()
@@ -219,18 +233,22 @@ def editar_usuario(usuario_id):
     if not current_user.es_admin:
         flash('No tienes permiso para acceder a esta página.')
         return redirect(url_for('dashboard'))
-    usuario.email = usuario.email or ""
-    usuario.telefono = usuario.telefono or ""
     if request.method == 'POST':
-        form = CrearUsuarioForm(request.form)
+        form = CrearUsuarioForm(request.form, obj=usuario)
     else:
         form = CrearUsuarioForm(obj=usuario)
+        # Forzar la asignación de los booleanos para reflejar el valor real
+        form.notificar_email.data = bool(usuario.notificar_email)
+        form.notificar_telegram.data = bool(usuario.notificar_telegram)
     if form.validate_on_submit():
         usuario.nombre = form.nombre.data
         usuario.es_admin = form.es_admin.data
         usuario.color = form.color.data
-        usuario.email = form.email.data
-        usuario.telefono = form.telefono.data
+        usuario.email = form.email.data or None
+        usuario.telefono = form.telefono.data or None
+        usuario.chat_id_telegram = form.chat_id_telegram.data or None
+        usuario.notificar_email = form.notificar_email.data
+        usuario.notificar_telegram = form.notificar_telegram.data
         if form.password.data:
             usuario.password = generate_password_hash(form.password.data)
         try:
@@ -276,6 +294,13 @@ def crear_tarea():
         db.session.add(tarea)
         try:
             db.session.commit()
+            # Notificación al usuario asignado
+            usuario = tarea.usuario  # Relación backref o joinedload
+            mensaje = f"Tienes una nueva tarea: {tarea.comentario} para el cliente {tarea.cliente.nombre if tarea.cliente else ''} el {tarea.fecha} a las {tarea.hora}"
+            if usuario.notificar_email and usuario.email:
+                enviar_email(usuario.email, "Nueva tarea asignada", mensaje)
+            if usuario.notificar_telegram and usuario.chat_id_telegram:
+                enviar_telegram(mensaje, usuario.chat_id_telegram, TOKEN_TELEGRAM)
             # Crear evento en Google Calendar
             try:
                 cliente_nombre = tarea.cliente.nombre if tarea.cliente else ''
