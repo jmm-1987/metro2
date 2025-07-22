@@ -345,8 +345,8 @@ def crear_tarea():
                 except Exception as e:
                     flash(f"Error al enviar correo: {e}", "danger")
                     print(f"Error al enviar correo: {e}")
-            if CHAT_ID_ADMIN_TELEGRAM:
-                enviar_telegram(mensaje, CHAT_ID_ADMIN_TELEGRAM, TOKEN_TELEGRAM)
+            #if CHAT_ID_ADMIN_TELEGRAM:
+            #    enviar_telegram(mensaje, CHAT_ID_ADMIN_TELEGRAM, TOKEN_TELEGRAM)
             flash('Tarea creada correctamente')
             return redirect(url_for('dashboard'))
         except Exception as e:
