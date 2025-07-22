@@ -298,7 +298,7 @@ def crear_tarea():
             # Notificación al usuario asignado
             usuario = tarea.usuario  # Relación backref o joinedload
             mensaje = (
-                "🔔 ¡Tienes una nueva tarea asignada!\n"
+                "🚀 ¡Tienes una nueva tarea asignada!\n"
                 f"👤 Cliente: {tarea.cliente.nombre if tarea.cliente else '-'}\n"
                 f"📝 Tarea: {tarea.comentario}\n"
                 f"📅 Fecha: {tarea.fecha.strftime('%d/%m/%Y')}\n"
@@ -310,7 +310,8 @@ def crear_tarea():
                 enviar_telegram(mensaje, usuario.chat_id_telegram, TOKEN_TELEGRAM)
             # Mensaje especial para el admin
             mensaje_admin = (
-                f"🔔 El comercial {usuario.nombre} tiene una nueva tarea asignada:\n"
+                f"🔔 TAREA DE COMERCIAL:\n"
+                f"🚀 El comercial {usuario.nombre} tiene una nueva tarea asignada:\n"
                 f"👤 Cliente: {tarea.cliente.nombre if tarea.cliente else '-'}\n"
                 f"📝 Tarea: {tarea.comentario}\n"
                 f"📅 Fecha: {tarea.fecha.strftime('%d/%m/%Y')}\n"
@@ -665,6 +666,16 @@ def guardar_encuesta():
     db.session.add(respuesta)
     try:
         db.session.commit()
+        # Enviar Telegram al admin con los datos de la encuesta
+        mensaje = (
+            "📝 Nueva encuesta completada\n"
+            f"👤 Cliente: {cliente.nombre} ({cliente.telefono})\n"
+            f"⭐ Puntuación: {puntuacion1}\n"
+            f"💬 Sugerencias: {sugerencias or '-'}\n"
+            f"📅 Fecha: {respuesta.fecha.strftime('%d/%m/%Y')}"
+        )
+        if CHAT_ID_ADMIN_TELEGRAM and TOKEN_TELEGRAM:
+            enviar_telegram(mensaje, CHAT_ID_ADMIN_TELEGRAM, TOKEN_TELEGRAM)
         return jsonify({'success': True})
     except Exception as e:
         db.session.rollback()

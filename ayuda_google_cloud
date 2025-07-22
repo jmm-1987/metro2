@@ -8,4 +8,4 @@ Autorizar en el calendario a la cuenta de servicio a hacer cambios
 conseguir id de telegram:
 desde el movil nuevo enviamos un telegram al bot M2_tareas
 luego accedemos a esta url y en el traking nos mostrará el registro en un json:
-https://api.telegram.org/bot8100640112:AAFU8qgfaRCWocU82aK3jJvh4KIIXqerAgw/getUpdates
+https://api.telegram.org/bot.............token del bot................/getUpdates
