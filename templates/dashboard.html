@@ -54,7 +54,8 @@
           duration: { days: 1 },
           buttonText: 'Día',
           noEventsText: 'No hay eventos para este día.',
-          listDayFormat: { hour: '2-digit', minute: '2-digit', meridiem: false }
+          listDayFormat: { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' },
+          titleFormat: { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }
         }
       },
       initialView: 'listDay',
@@ -265,6 +266,14 @@
 .fc-timegrid-axis, .fc-timegrid-axis-frame { display: none !important; }
 .fc .fc-timegrid-slot-label { display: none !important; }
 .fc .fc-timegrid-col-frame { border-left: 1px solid #eee; }
+
+/* Ocultar el encabezado azul de la fecha en la vista diaria */
+.fc-list-day-cushion { display: none !important; }
+
+/* Sombreado para sábados y domingos en la vista de semana y mes */
+.fc-day-sat, .fc-day-sun {
+    background-color: #f8f9fa !important;
+}
 
 @media (max-width: 768px) {
   .card.shadow.p-4.flex-grow-1 {

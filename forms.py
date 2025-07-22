@@ -29,6 +29,7 @@ class CrearClienteForm(FlaskForm):
         ('inversor', 'Inversor'),
         ('comprador', 'Comprador'),
         ('arrendatario', 'Arrendatario'),
+        ('arrendador', 'Arrendador'),
         ('vendedor', 'Vendedor')
     ])
     interes = SelectMultipleField('Interés en', choices=[
@@ -64,7 +65,7 @@ class CrearTareaForm(FlaskForm):
     hora = SelectField('Hora', choices=hora_choices, validators=[DataRequired()])
     comentario = TextAreaField('Comentario')
     resolucion = TextAreaField('Resolución')
-    estado = SelectField('Estado', choices=[('por_hacer', 'Por hacer'), ('pendiente', 'Standby'), ('cancelado', 'Cancelado'), ('reagendada', 'Reagendada')], validators=[DataRequired()])
+    estado = SelectField('Estado', choices=[('por_hacer', 'Por hacer')], validators=[DataRequired()])
     submit = SubmitField('Crear tarea')
 
 class ResolverTareaForm(FlaskForm):

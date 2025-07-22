@@ -366,6 +366,10 @@ def editar_tarea(tarea_id):
             if estado_post:
                 tarea.estado = estado_post
                 tarea.resolucion = form.resolucion.data
+                # Si se cancela la tarea y hay cliente asociado, desactivar y finalizar cliente
+                if estado_post == 'cancelado' and tarea.cliente:
+                    tarea.cliente.estado = 'finalizado'
+                    tarea.cliente.activo = False
             try:
                 db.session.commit()
                 if estado_post:
@@ -492,8 +496,8 @@ def formulario():
 @app.route('/inversores')
 @login_required
 def inversores():
-    # Mostrar todos los clientes en curso o standby, sin importar tipo_cliente
-    clientes = Cliente.query.filter(Cliente.estado.in_(['en_curso', 'pendiente'])).all()
+    # Mostrar solo los clientes inversores en curso o standby
+    clientes = Cliente.query.filter(Cliente.estado.in_(['en_curso', 'pendiente']), Cliente.tipo_cliente == 'inversor').all()
     usuarios_dict = {u.id: u.nombre for u in Usuario.query.all()}
     return render_template('inversores.html', clientes=clientes, usuarios_dict=usuarios_dict)
 
@@ -555,7 +559,15 @@ def toggle_usuario(usuario_id):
 @login_required
 def toggle_cliente(cliente_id):
     cliente = Cliente.query.get_or_404(cliente_id)
-    cliente.activo = not cliente.activo
+    if cliente.activo:
+        # Si se desactiva, también pasamos a 'finalizado' si no lo está
+        cliente.activo = False
+        if cliente.estado != 'finalizado':
+            cliente.estado = 'finalizado'
+    else:
+        # Si se activa, también pasamos a 'en_curso'
+        cliente.activo = True
+        cliente.estado = 'en_curso'
     try:
         db.session.commit()
         flash(f"Cliente {'activado' if cliente.activo else 'desactivado'} correctamente.")
