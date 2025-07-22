@@ -308,6 +308,16 @@ def crear_tarea():
                 enviar_email(usuario.email, "Nueva tarea asignada", mensaje)
             if usuario.notificar_telegram and usuario.chat_id_telegram:
                 enviar_telegram(mensaje, usuario.chat_id_telegram, TOKEN_TELEGRAM)
+            # Mensaje especial para el admin
+            mensaje_admin = (
+                f"🔔 El comercial {usuario.nombre} tiene una nueva tarea asignada:\n"
+                f"👤 Cliente: {tarea.cliente.nombre if tarea.cliente else '-'}\n"
+                f"📝 Tarea: {tarea.comentario}\n"
+                f"📅 Fecha: {tarea.fecha.strftime('%d/%m/%Y')}\n"
+                f"⏰ Hora: {tarea.hora.strftime('%H:%M') if tarea.hora else '-'}"
+            )
+            if CHAT_ID_ADMIN_TELEGRAM:
+                enviar_telegram(mensaje_admin, CHAT_ID_ADMIN_TELEGRAM, TOKEN_TELEGRAM)
             # Crear evento en Google Calendar
             try:
                 cliente_nombre = tarea.cliente.nombre if tarea.cliente else ''
