@@ -19,6 +19,7 @@ from enviar_telegram import enviar_telegram
 
 # Cargar el token una vez al arrancar la app
 TOKEN_TELEGRAM = os.environ.get('TELEGRAM_BOT_TOKEN')
+CHAT_ID_ADMIN_TELEGRAM = os.environ.get('CHAT_ID_ADMIN_TELEGRAM')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'cambia_esto_por_un_valor_seguro'
@@ -296,7 +297,13 @@ def crear_tarea():
             db.session.commit()
             # Notificación al usuario asignado
             usuario = tarea.usuario  # Relación backref o joinedload
-            mensaje = f"Tienes una nueva tarea: {tarea.comentario} para el cliente {tarea.cliente.nombre if tarea.cliente else ''} el {tarea.fecha} a las {tarea.hora}"
+            mensaje = (
+                "🔔 ¡Tienes una nueva tarea asignada!\n"
+                f"👤 Cliente: {tarea.cliente.nombre if tarea.cliente else '-'}\n"
+                f"📝 Tarea: {tarea.comentario}\n"
+                f"📅 Fecha: {tarea.fecha.strftime('%d/%m/%Y')}\n"
+                f"⏰ Hora: {tarea.hora.strftime('%H:%M') if tarea.hora else '-'}"
+            )
             if usuario.notificar_email and usuario.email:
                 enviar_email(usuario.email, "Nueva tarea asignada", mensaje)
             if usuario.notificar_telegram and usuario.chat_id_telegram:
@@ -328,6 +335,8 @@ def crear_tarea():
                 except Exception as e:
                     flash(f"Error al enviar correo: {e}", "danger")
                     print(f"Error al enviar correo: {e}")
+            if CHAT_ID_ADMIN_TELEGRAM:
+                enviar_telegram(mensaje, CHAT_ID_ADMIN_TELEGRAM, TOKEN_TELEGRAM)
             flash('Tarea creada correctamente')
             return redirect(url_for('dashboard'))
         except Exception as e:
