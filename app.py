@@ -316,7 +316,7 @@ def crear_tarea():
                 f"📅 Fecha: {tarea.fecha.strftime('%d/%m/%Y')}\n"
                 f"⏰ Hora: {tarea.hora.strftime('%H:%M') if tarea.hora else '-'}"
             )
-            if CHAT_ID_ADMIN_TELEGRAM:
+            if CHAT_ID_ADMIN_TELEGRAM and (str(CHAT_ID_ADMIN_TELEGRAM) != str(usuario.chat_id_telegram)):
                 enviar_telegram(mensaje_admin, CHAT_ID_ADMIN_TELEGRAM, TOKEN_TELEGRAM)
             # Crear evento en Google Calendar
             try:
