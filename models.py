@@ -34,7 +34,7 @@ class Cliente(db.Model):
     zonas = db.Column(db.Text, nullable=True)
     precio_min = db.Column(db.Integer, nullable=True)
     precio_max = db.Column(db.Integer, nullable=True)
-    encuesta_enviada = db.Column(db.Boolean, default=False)
+    encuesta_enviada = db.Column(db.String(20), default="sin_enviar")
     comercial_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
     activo = db.Column(db.Boolean, default=True)  # Nuevo campo para desactivar cliente

@@ -43,13 +43,23 @@ class CrearClienteForm(FlaskForm):
         ('finca rustica', 'Finca rústica')
     ], option_widget=widgets.CheckboxInput(), widget=widgets.ListWidget(prefix_label=False))
     zonas = SelectMultipleField('Zonas', choices=[
-        ('centro', 'Centro'),
-        ('bodegones-sur', 'Bodegones-Sur'),
-        ('nueva ciudad', 'Nueva Ciudad'),
-        ('sindicales', 'Sindicales'),
-        ('maria aux', 'Maria Aux'),
         ('abadias', 'Abadias'),
-        ('montealto', 'Montealto')
+        ('abadias norte', 'Abadias Norte'),
+        ('calzada', 'Calzada'),
+        ('bodegones / zona sur', 'Bodegones / Zona Sur'),
+        ('centro', 'Centro'),
+        ('la corchera', 'La Corchera'),
+        ('maria auxiliadora', 'Maria Auxiliadora'),
+        ('sindicales', 'Sindicales'),
+        ('montealto', 'Montealto'),
+        ('nueva ciudad', 'Nueva Ciudad'),
+        ('prado / ifeme', 'Prado / IFEME'),
+        ('proserpina', 'Proserpina'),
+        ('salesianos', 'Salesianos'),
+        ('vivero', 'Vivero'),
+        ('san juan / santa isabel', 'San Juan / Santa Isabel'),
+        ('plantonal', 'Plantonial'),
+        ('san andres', 'San Andres')
     ], option_widget=widgets.CheckboxInput(), widget=widgets.ListWidget(prefix_label=False))
     precio_min = IntegerField('Precio mínimo dispuesto a pagar')
     precio_max = IntegerField('Precio máximo dispuesto a pagar')

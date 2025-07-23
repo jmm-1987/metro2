@@ -23,7 +23,8 @@ CHAT_ID_ADMIN_TELEGRAM = os.environ.get('CHAT_ID_ADMIN_TELEGRAM')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'cambia_esto_por_un_valor_seguro'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://metro2_user:5L8bWpgBbYvx4ihoBCUI7PohMlBnqJkd@dpg-d209jqh5pdvs73c9ld3g-a.virginia-postgres.render.com/metro2'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 from models import db, Usuario, Cliente, Tarea, Evento
@@ -310,7 +311,7 @@ def crear_tarea():
                 enviar_telegram(mensaje, usuario.chat_id_telegram, TOKEN_TELEGRAM)
             # Mensaje especial para el admin
             mensaje_admin = (
-                f"🔔 TAREA DE COMERCIAL:\n"
+                f"🔔🔔🔔🔔 TAREA DE COMERCIAL:\n"
                 f"🚀 El comercial {usuario.nombre} tiene una nueva tarea asignada:\n"
                 f"👤 Cliente: {tarea.cliente.nombre if tarea.cliente else '-'}\n"
                 f"📝 Tarea: {tarea.comentario}\n"
@@ -660,8 +661,8 @@ def guardar_encuesta():
         fecha=datetime.datetime.strptime(data.get('fecha'), '%Y-%m-%d') if data.get('fecha') else datetime.datetime.utcnow()
     )
     
-    # Marcar la encuesta como enviada en el cliente
-    cliente.encuesta_enviada = True
+    # Marcar la encuesta como respondida en el cliente
+    cliente.encuesta_enviada = "respondida"
     
     db.session.add(respuesta)
     try:
@@ -676,6 +677,18 @@ def guardar_encuesta():
         )
         if CHAT_ID_ADMIN_TELEGRAM and TOKEN_TELEGRAM:
             enviar_telegram(mensaje, CHAT_ID_ADMIN_TELEGRAM, TOKEN_TELEGRAM)
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/marcar_encuesta_enviada/<int:cliente_id>', methods=['POST'])
+@login_required
+def marcar_encuesta_enviada(cliente_id):
+    cliente = Cliente.query.get_or_404(cliente_id)
+    cliente.encuesta_enviada = "enviada"
+    try:
+        db.session.commit()
         return jsonify({'success': True})
     except Exception as e:
         db.session.rollback()
