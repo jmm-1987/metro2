@@ -23,7 +23,7 @@ CHAT_ID_ADMIN_TELEGRAM = os.environ.get('CHAT_ID_ADMIN_TELEGRAM')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'cambia_esto_por_un_valor_seguro'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://metro2_user:5L8bWpgBbYvx4ihoBCUI7PohMlBnqJkd@dpg-d209jqh5pdvs73c9ld3g-a.virginia-postgres.render.com/metro2'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -325,12 +325,14 @@ def crear_tarea():
                 cliente_nombre = tarea.cliente.nombre if tarea.cliente else ''
                 cliente_telefono = tarea.cliente.telefono if tarea.cliente else ''
                 descripcion = f"Cliente: {cliente_nombre} ({cliente_telefono})\nResolución: {tarea.resolucion or ''}"
-                crear_evento_google_calendar(
+                event_id = crear_evento_google_calendar(
                     titulo=f"Tarea: {tarea.comentario}",
                     descripcion=descripcion,
                     fecha=str(tarea.fecha),
                     hora=str(tarea.hora)[:5]  # formato HH:MM
                 )
+                tarea.google_event_id = event_id
+                db.session.commit()
             except Exception as e:
                 flash('La tarea se creó, pero no se pudo añadir a Google Calendar.', 'warning')
                 print(f"Error al crear evento en Google Calendar: {e}")
@@ -369,11 +371,30 @@ def editar_tarea(tarea_id):
             try:
                 db.session.commit()
                 # Crear un nuevo evento en Google Calendar tras editar
-                from google_calendar import crear_evento_google_calendar_desde_tarea
+                from google_calendar import actualizar_evento_google_calendar, crear_evento_google_calendar
                 try:
-                    crear_evento_google_calendar_desde_tarea(tarea)
+                    cliente_nombre = tarea.cliente.nombre if tarea.cliente else ''
+                    cliente_telefono = tarea.cliente.telefono if tarea.cliente else ''
+                    descripcion = f"Cliente: {cliente_nombre} ({cliente_telefono})\nResolución: {tarea.resolucion or ''}"
+                    if tarea.google_event_id:
+                        actualizar_evento_google_calendar(
+                            tarea.google_event_id,
+                            titulo=f"Tarea: {tarea.comentario}",
+                            descripcion=descripcion,
+                            fecha=str(tarea.fecha),
+                            hora=str(tarea.hora)[:5] if tarea.hora else '00:00'
+                        )
+                    else:
+                        event_id = crear_evento_google_calendar(
+                            titulo=f"Tarea: {tarea.comentario}",
+                            descripcion=descripcion,
+                            fecha=str(tarea.fecha),
+                            hora=str(tarea.hora)[:5] if tarea.hora else '00:00'
+                        )
+                        tarea.google_event_id = event_id
+                        db.session.commit()
                 except Exception as e:
-                    flash(f'La tarea se guardó, pero no se pudo crear el evento en Google Calendar: {e}', 'warning')
+                    flash(f'La tarea se guardó, pero no se pudo actualizar/crear el evento en Google Calendar: {e}', 'warning')
                 flash('Tarea actualizada correctamente.')
                 return redirect(url_for('dashboard'))
             except Exception as e:
@@ -401,6 +422,16 @@ def editar_tarea(tarea_id):
                 if estado_post == 'cancelado' and tarea.cliente:
                     tarea.cliente.estado = 'finalizado'
                     tarea.cliente.activo = False
+                # Eliminar evento de Google Calendar si existe
+                if tarea.google_event_id:
+                    try:
+                        from google_calendar import eliminar_evento_google_calendar
+                        eliminar_evento_google_calendar(tarea.google_event_id)
+                        tarea.google_event_id = None
+                        db.session.commit()
+                    except Exception as e:
+                        flash('La tarea se resolvió, pero no se pudo eliminar el evento en Google Calendar.', 'warning')
+                        print(f"Error al eliminar evento en Google Calendar: {e}")
             try:
                 db.session.commit()
                 if estado_post:

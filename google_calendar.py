@@ -88,4 +88,57 @@ def crear_evento_google_calendar_desde_tarea(tarea):
         },
     }
     evento = service.events().insert(calendarId=calendar_id, body=event).execute()
-    return evento.get('id') 
+    return evento.get('id')
+
+def actualizar_evento_google_calendar(event_id, titulo, descripcion, fecha, hora, duracion_min=30):
+    """
+    Actualiza un evento existente en Google Calendar usando su event_id.
+    """
+    creds_json = os.environ.get('GOOGLE_CREDENTIALS_JSON')
+    if not creds_json:
+        raise Exception("No se encontró la variable de entorno GOOGLE_CREDENTIALS_JSON")
+    creds_dict = json.loads(creds_json)
+    creds = service_account.Credentials.from_service_account_info(
+        creds_dict,
+        scopes=['https://www.googleapis.com/auth/calendar']
+    )
+    service = build('calendar', 'v3', credentials=creds)
+    calendar_id = os.environ.get('GOOGLE_CALENDAR_ID')
+    if not calendar_id:
+        raise Exception("No se encontró la variable de entorno GOOGLE_CALENDAR_ID")
+    start_datetime = f"{fecha}T{hora}:00"
+    start_dt = datetime.strptime(start_datetime, "%Y-%m-%dT%H:%M:%S")
+    end_dt = start_dt + timedelta(minutes=duracion_min)
+    event = {
+        'summary': titulo,
+        'description': descripcion,
+        'start': {
+            'dateTime': start_dt.isoformat(),
+            'timeZone': 'Europe/Madrid',
+        },
+        'end': {
+            'dateTime': end_dt.isoformat(),
+            'timeZone': 'Europe/Madrid',
+        },
+    }
+    evento = service.events().patch(calendarId=calendar_id, eventId=event_id, body=event).execute()
+    return evento.get('id')
+
+def eliminar_evento_google_calendar(event_id):
+    """
+    Elimina un evento de Google Calendar usando su event_id.
+    """
+    creds_json = os.environ.get('GOOGLE_CREDENTIALS_JSON')
+    if not creds_json:
+        raise Exception("No se encontró la variable de entorno GOOGLE_CREDENTIALS_JSON")
+    creds_dict = json.loads(creds_json)
+    creds = service_account.Credentials.from_service_account_info(
+        creds_dict,
+        scopes=['https://www.googleapis.com/auth/calendar']
+    )
+    service = build('calendar', 'v3', credentials=creds)
+    calendar_id = os.environ.get('GOOGLE_CALENDAR_ID')
+    if not calendar_id:
+        raise Exception("No se encontró la variable de entorno GOOGLE_CALENDAR_ID")
+    service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
+    return True 

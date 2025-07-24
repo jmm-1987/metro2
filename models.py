@@ -51,6 +51,7 @@ class Tarea(db.Model):
     comentario = db.Column(db.Text)
     resolucion = db.Column(db.Text)
     estado = db.Column(db.String(20), nullable=False, default='por_hacer')  # por_hacer, ha_comprado, ha_alquilado, cancelado
+    google_event_id = db.Column(db.String(128), nullable=True)  # ID del evento de Google Calendar
     cliente = db.relationship('Cliente', back_populates='tareas')
     usuario = db.relationship('Usuario', back_populates='tareas')
 
