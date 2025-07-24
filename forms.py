@@ -58,7 +58,7 @@ class CrearClienteForm(FlaskForm):
         ('salesianos', 'Salesianos'),
         ('vivero', 'Vivero'),
         ('san juan / santa isabel', 'San Juan / Santa Isabel'),
-        ('plantonal', 'Plantonial'),
+        ('plantonal', 'Plantonal'),
         ('san andres', 'San Andres')
     ], option_widget=widgets.CheckboxInput(), widget=widgets.ListWidget(prefix_label=False))
     precio_min = IntegerField('Precio mínimo dispuesto a pagar', validators=[Optional()])

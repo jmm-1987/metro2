@@ -23,30 +23,30 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item mx-1">
-          <a class="nav-link btn btn-outline-success rounded-pill px-3 d-flex align-items-center gap-2" href="/">
+          <a class="nav-link btn btn-outline-success rounded-pill px-3 d-flex align-items-center gap-2 menu-tareas" href="/">
             <i class="bi bi-journal-text"></i> Tareas
           </a>
         </li>
         <li class="nav-item mx-1">
-          <a class="nav-link btn btn-outline-primary rounded-pill px-3 d-flex align-items-center gap-2" href="/clientes">
+          <a class="nav-link btn btn-outline-primary rounded-pill px-3 d-flex align-items-center gap-2 menu-clientes" href="/clientes">
             <i class="bi bi-people"></i> Clientes
           </a>
         </li>
         <li class="nav-item mx-1">
-          <a class="nav-link btn btn-outline-danger rounded-pill px-3 d-flex align-items-center gap-2" href="/inversores">
+          <a class="nav-link btn btn-outline-danger rounded-pill px-3 d-flex align-items-center gap-2 menu-inversores" href="/inversores">
             <i class="bi bi-cash-coin"></i> Inversores
           </a>
         </li>
         {% if current_user.is_authenticated %}
         <li class="nav-item mx-1">
-          <a class="nav-link btn btn-outline-secondary rounded-pill px-3 d-flex align-items-center gap-2" href="/respuestas_formulario">
+          <a class="nav-link btn btn-outline-secondary rounded-pill px-3 d-flex align-items-center gap-2 menu-respuestas" href="/respuestas_formulario">
             <i class="bi bi-clipboard-check"></i> Respuestas formulario
           </a>
         </li>
         {% endif %}
         {% if current_user.is_authenticated and current_user.es_admin %}
         <li class="nav-item mx-1">
-          <a class="nav-link btn btn-outline-dark rounded-pill px-3 d-flex align-items-center gap-2" href="/usuarios">
+          <a class="nav-link btn btn-outline-dark rounded-pill px-3 d-flex align-items-center gap-2 menu-usuarios" href="/usuarios">
             <i class="bi bi-person-gear"></i> Usuarios
           </a>
         </li>

@@ -3,10 +3,14 @@
 {% block content %}
 <div class="card shadow p-4 flex-grow-1">
   <div class="d-flex justify-content-end mb-2">
-    <button id="toggle-resueltas" class="btn btn-outline-secondary btn-sm">Ver resueltas</button>
-    <a href="{{ url_for('crear_tarea') }}" class="btn btn-primary btn-sm ms-2"><i class="bi bi-plus"></i> Crear tarea</a>
+    <button id="toggle-resueltas" class="btn btn-outline-secondary btn-sm btn-ver-resueltas" title="Ver resueltas">
+      <i class="bi bi-eye"></i> <span class="btn-text">Ver resueltas</span>
+    </button>
+    <a href="{{ url_for('crear_tarea') }}" class="btn btn-primary btn-sm ms-2 btn-crear-tarea" title="Crear tarea">
+      <i class="bi bi-plus"></i> <span class="btn-text">Crear tarea</span>
+    </a>
     {% if es_admin %}
-    <select id="filtro-comercial" class="form-select form-select-sm ms-2" style="width:auto;display:inline-block;max-width:200px;">
+    <select id="filtro-comercial" class="form-select form-select-sm ms-2 filtro-comercial" style="width:auto;display:inline-block;max-width:200px;">
       <option value="">Todos los comerciales</option>
       {% for usuario in usuarios %}
         <option value="{{ usuario.id }}">{{ usuario.nombre }}</option>
@@ -181,7 +185,6 @@
                   <i class="bi bi-pencil-square"></i>
                 </a>
                 ${whatsappBtn}
-                ${window.esAdmin ? `<button class='btn btn-outline-danger btn-sm btn-eliminar-tarea' data-tarea-id='${arg.event.id}' title='Eliminar'><i class='bi bi-trash'></i></button>` : ''}
               </div>
               <div style="width: 120px; text-align:center; color:${estadoColor};">${estadoBadge}</div>
             </div>
@@ -224,33 +227,6 @@
       mostrarResueltas = !mostrarResueltas;
       this.textContent = mostrarResueltas ? 'Ocultar resueltas' : 'Ver resueltas';
       calendar.refetchEvents();
-    });
-
-    // Manejar eliminación de tareas
-    document.getElementById('calendar').addEventListener('click', function(e) {
-      if (e.target.closest('.btn-eliminar-tarea')) {
-        e.preventDefault();
-        const btn = e.target.closest('.btn-eliminar-tarea');
-        const tareaId = btn.getAttribute('data-tarea-id');
-        if (confirm('¿Seguro que quieres eliminar esta tarea?')) {
-          fetch(`/eliminar_tarea/${tareaId}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest'
-            }
-          })
-          .then(res => res.json())
-          .then(data => {
-            if (data.success) {
-              calendar.refetchEvents();
-            } else {
-              alert('Error al eliminar la tarea: ' + (data.error || 'Desconocido'));
-            }
-          })
-          .catch(() => alert('Error de red al eliminar la tarea.'));
-        }
-      }
     });
 
     {% if es_admin %}
