@@ -283,6 +283,9 @@ h2 {
 .btn-ver-resueltas .btn-text {
   display: inline;
 }
+.barra-navegacion-movil {
+    display: none;
+}
 @media (max-width: 700px) {
   .navbar {
     padding: 0.3rem 0.5rem !important;
@@ -425,5 +428,154 @@ h2 {
   .btn-crear-tarea .btn-text,
   .btn-ver-resueltas .btn-text {
     display: none !important;
+  }
+  .botones-superiores {
+    display: none !important;
+  }
+  .barra-navegacion-movil {
+    display: flex !important;
+  }
+  .card.shadow.p-4.flex-grow-1 {
+    padding-top: 0.5rem !important;
+    margin-top: 0 !important;
+  }
+  #calendar, .fc {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+  .fc-header-toolbar, .fc-toolbar {
+    margin-bottom: 0.2rem !important;
+    margin-top: 0 !important;
+  }
+  .navbar {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    min-height: 40px !important;
+  }
+  .navbar-brand img {
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-top: 0 !important;
+  }
+  .card.shadow.p-4.flex-grow-1 {
+    padding-top: 0.1rem !important;
+    margin-top: 0 !important;
+  }
+  #calendar, .fc {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+  .fc-header-toolbar, .fc-toolbar {
+    margin-bottom: 0.1rem !important;
+    margin-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-top: 0 !important;
+  }
+  .fc-toolbar-chunk {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .fc-toolbar-title {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+  }
+  @media (max-width: 700px) {
+    .fc-toolbar-title {
+      font-size: 0.95rem !important;
+      font-weight: 600 !important;
+      margin-bottom: 0 !important;
+      margin-top: 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      max-width: 90vw !important;
+    }
+  }
+  @media (max-width: 700px) {
+    .navbar {
+      margin-bottom: 0 !important;
+      padding-bottom: 0 !important;
+      min-height: 40px !important;
+      border-bottom: none !important;
+    }
+    .navbar-brand img {
+      margin-bottom: 0 !important;
+      margin-top: 0 !important;
+      padding-bottom: 0 !important;
+      padding-top: 0 !important;
+    }
+    .card.shadow.p-4.flex-grow-1 {
+      padding-top: 0 !important;
+      margin-top: 0 !important;
+    }
+    #calendar, .fc {
+      margin-top: 0 !important;
+      padding-top: 0 !important;
+    }
+    .fc-header-toolbar, .fc-toolbar {
+      margin-bottom: 0.05rem !important;
+      margin-top: 0 !important;
+      padding-bottom: 0 !important;
+      padding-top: 0 !important;
+    }
+    .fc-toolbar-chunk {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+  }
+  @media (max-width: 700px) {
+    .navbar,
+    .navbar * {
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      border-bottom: none !important;
+    }
+    .card.shadow.p-4.flex-grow-1,
+    .card.shadow.p-4.flex-grow-1 > *:first-child {
+      margin-top: 0 !important;
+      padding-top: 0 !important;
+    }
+    #calendar, .fc, .fc-header-toolbar, .fc-toolbar, .fc-toolbar-chunk {
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      border: none !important;
+    }
+    body > .card,
+    body > .card > *:first-child {
+      margin-top: 0 !important;
+      padding-top: 0 !important;
+    }
+  }
+  @media (max-width: 700px) {
+    .fc-header-toolbar, .fc-toolbar {
+      margin-top: 0 !important;
+      margin-bottom: 0.05rem !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      border: none !important;
+    }
+    .fc-header-toolbar > .fc-toolbar-chunk:first-child,
+    .fc-toolbar > .fc-toolbar-chunk:first-child {
+      margin-top: 0 !important;
+      padding-top: 0 !important;
+      border: none !important;
+    }
+    .fc-header-toolbar:before, .fc-toolbar:before {
+      display: none !important;
+      content: none !important;
+    }
+  }
+  @media (max-width: 700px) {
+    .flex-grow-1.d-flex.flex-column {
+      margin-top: 0 !important;
+      padding-top: 0 !important;
+    }
   }
 } 
