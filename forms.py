@@ -61,8 +61,8 @@ class CrearClienteForm(FlaskForm):
         ('plantonal', 'Plantonial'),
         ('san andres', 'San Andres')
     ], option_widget=widgets.CheckboxInput(), widget=widgets.ListWidget(prefix_label=False))
-    precio_min = IntegerField('Precio mínimo dispuesto a pagar')
-    precio_max = IntegerField('Precio máximo dispuesto a pagar')
+    precio_min = IntegerField('Precio mínimo dispuesto a pagar', validators=[Optional()])
+    precio_max = IntegerField('Precio máximo dispuesto a pagar', validators=[Optional()])
     estado = SelectField('Estado', choices=[('en_curso', 'En curso'),('pendiente', 'Standby'), ('finalizado', 'Finalizado')], default='en_curso')
     comercial_id = SelectField('Comercial habitual', coerce=int, choices=[])
     fecha_creacion = DateField('Fecha de alta', format='%Y-%m-%d', render_kw={'readonly': True})

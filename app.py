@@ -334,21 +334,6 @@ def crear_tarea():
             except Exception as e:
                 flash('La tarea se creó, pero no se pudo añadir a Google Calendar.', 'warning')
                 print(f"Error al crear evento en Google Calendar: {e}")
-            # Enviar email de notificación SOLO si no es reagendada
-            es_reagendada = request.args.get('reagendada') == '1'
-            destinatario = "rvazquez@m2merida.com"
-            asunto = "Nueva tarea creada"
-            cuerpo = f"Se ha creado una nueva tarea para el cliente: {cliente_nombre} ({cliente_telefono})\nComentario: {tarea.comentario}\nFecha: {tarea.fecha} {tarea.hora}"
-            if not es_reagendada:
-                try:
-                    print("Llamando a enviar_email...")
-                    enviar_email(destinatario, asunto, cuerpo)
-                    print("Llamada a enviar_email terminada")
-                except Exception as e:
-                    flash(f"Error al enviar correo: {e}", "danger")
-                    print(f"Error al enviar correo: {e}")
-            #if CHAT_ID_ADMIN_TELEGRAM:
-            #    enviar_telegram(mensaje, CHAT_ID_ADMIN_TELEGRAM, TOKEN_TELEGRAM)
             flash('Tarea creada correctamente')
             return redirect(url_for('dashboard'))
         except Exception as e:
