@@ -377,6 +377,7 @@ def editar_tarea(tarea_id):
                     cliente_telefono = tarea.cliente.telefono if tarea.cliente else ''
                     descripcion = f"Cliente: {cliente_nombre} ({cliente_telefono})\nResolución: {tarea.resolucion or ''}"
                     if tarea.google_event_id:
+                        print(f"Intentando actualizar evento Google Calendar: {tarea.google_event_id}")
                         actualizar_evento_google_calendar(
                             tarea.google_event_id,
                             titulo=f"Tarea: {tarea.comentario}",
@@ -384,7 +385,9 @@ def editar_tarea(tarea_id):
                             fecha=str(tarea.fecha),
                             hora=str(tarea.hora)[:5] if tarea.hora else '00:00'
                         )
+                        print("Evento actualizado correctamente")
                     else:
+                        print("No existía google_event_id, creando uno nuevo en Google Calendar")
                         event_id = crear_evento_google_calendar(
                             titulo=f"Tarea: {tarea.comentario}",
                             descripcion=descripcion,
@@ -393,8 +396,10 @@ def editar_tarea(tarea_id):
                         )
                         tarea.google_event_id = event_id
                         db.session.commit()
+                        print(f"Nuevo evento creado en Google Calendar con id: {event_id}")
                 except Exception as e:
-                    flash(f'La tarea se guardó, pero no se pudo actualizar/crear el evento en Google Calendar: {e}', 'warning')
+                    print(f"Error al actualizar/crear evento en Google Calendar: {e}")
+                    flash('La tarea se guardó, pero no se pudo actualizar/crear el evento en Google Calendar.', 'warning')
                 flash('Tarea actualizada correctamente.')
                 return redirect(url_for('dashboard'))
             except Exception as e:
