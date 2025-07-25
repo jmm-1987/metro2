@@ -123,6 +123,33 @@
           div.title = tooltip;
           return { domNodes: [div] };
         }
+        const isMobile = window.innerWidth <= 700;
+        if (arg.view.type === 'listDay' && isMobile) {
+          // SOLO EN MÓVIL: lista compacta y solo info esencial
+          let telefono = arg.event.extendedProps.telefono || '';
+          let cliente = arg.event.extendedProps.cliente || '';
+          let comercialColor = arg.event.extendedProps.comercial_color || '#198754';
+          let hora = arg.event.start ? arg.event.start.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+          let whatsappBtn = '';
+          let llamarBtn = '';
+          if (telefono) {
+            let telClean = telefono.replace(/[^\d+]/g, '');
+            whatsappBtn = `<a href='https://wa.me/${telClean}' target='_blank' title='WhatsApp' class='btn btn-outline-success btn-sm btn-whatsapp' onclick='event.stopPropagation();'><i class='bi bi-whatsapp'></i></a>`;
+            llamarBtn = `<a href='tel:${telClean}' title='Llamar' class='btn btn-outline-primary btn-sm btn-llamar' onclick='event.stopPropagation();'><i class='bi bi-telephone'></i></a>`;
+          }
+          let comercialCircle = `<span style='display:inline-block;width:18px;height:18px;border-radius:50%;background:${comercialColor};margin-right:6px;vertical-align:middle;'></span>`;
+          let urlEditar = arg.event.url || '#';
+          let html = `
+            <a href='${urlEditar}' class='tarea-movil-link' style='text-decoration:none;color:inherit;'>
+              <div class='d-flex align-items-center justify-content-between w-100' style='min-height:32px;'>
+                <span class='hora-y-botones'><span style='font-weight:600;'>${hora}</span>${whatsappBtn}${llamarBtn}</span>
+                <span style='margin-right:8px;'>${comercialCircle}</span>
+                <span style='flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${cliente}</span>
+              </div>
+            </a>
+          `;
+          return { html: html };
+        }
         if (arg.view.type === 'listDay') {
           if (arg.event.extendedProps.isHeader) {
             return {
