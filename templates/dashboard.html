@@ -125,13 +125,13 @@
         }
         const isMobile = window.innerWidth <= 700;
         if (arg.view.type === 'listDay' && isMobile) {
-          // SOLO EN MÓVIL: lista compacta y solo info esencial
           let telefono = arg.event.extendedProps.telefono || '';
           let cliente = arg.event.extendedProps.cliente || '';
           let comercialColor = arg.event.extendedProps.comercial_color || '#198754';
           let hora = arg.event.start ? arg.event.start.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
           let whatsappBtn = '';
           let llamarBtn = '';
+          console.log('TAREA:', cliente, 'TEL:', telefono);
           if (telefono) {
             let telClean = telefono.replace(/[^\d+]/g, '');
             whatsappBtn = `<a href='https://wa.me/${telClean}' target='_blank' title='WhatsApp' class='btn btn-outline-success btn-sm btn-whatsapp' onclick='event.stopPropagation();'><i class='bi bi-whatsapp'></i></a>`;
@@ -141,10 +141,11 @@
           let urlEditar = arg.event.url || '#';
           let html = `
             <a href='${urlEditar}' class='tarea-movil-link' style='text-decoration:none;color:inherit;'>
-              <div class='d-flex align-items-center justify-content-between w-100' style='min-height:32px;'>
-                <span class='hora-y-botones'><span style='font-weight:600;'>${hora}</span>${whatsappBtn}${llamarBtn}</span>
-                <span style='margin-right:8px;'>${comercialCircle}</span>
-                <span style='flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${cliente}</span>
+              <div class='d-flex align-items-center w-100' style='min-height:32px;gap:6px;'>
+                <span class='color-comercial-movil' style='background:${comercialColor};'></span>
+                <span class='hora-movil'>${hora}</span>
+                <span class='nombre-cliente-movil'>${cliente}</span>
+                <span class='botones-accion-movil'>${whatsappBtn}${llamarBtn}</span>
               </div>
             </a>
           `;

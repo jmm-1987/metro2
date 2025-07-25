@@ -633,19 +633,81 @@ h2 {
       max-width: 100vw;
     }
     .tarea-movil-link .d-flex {
-      min-width: 320px;
-      width: max-content;
+      display: flex !important;
+      align-items: center !important;
+      min-width: 0 !important;
+      width: 100% !important;
+      gap: 6px !important;
     }
-    .tarea-movil-link span[style*='flex:1 1 auto'] {
-      max-width: 120px;
+    .tarea-movil-link .color-comercial-movil {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      margin-right: 2px;
+      flex-shrink: 0;
+    }
+    .tarea-movil-link .hora-movil {
+      font-weight: 600;
+      width: 38px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .tarea-movil-link .nombre-cliente-movil {
+      flex: 1 1 min(40vw, 120px);
+      min-width: 0;
+      max-width: min(40vw, 120px);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       display: inline-block;
       vertical-align: middle;
     }
-    .btn-whatsapp, .btn-llamar {
+    .tarea-movil-link .botones-accion-movil {
+      display: flex !important;
+      gap: 2px !important;
+      margin-left: auto !important;
       flex-shrink: 0;
+    }
+    .tarea-movil-link .btn-whatsapp, .tarea-movil-link .btn-llamar {
+      min-width: 24px !important;
+      min-height: 24px !important;
+      width: 24px !important;
+      height: 24px !important;
+      padding: 0 !important;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Semana y mes compactos y sin scroll */
+    .fc .fc-daygrid-day-frame, .fc .fc-daygrid-day {
+      min-width: 0 !important;
+      padding: 0.1rem 0.1rem !important;
+    }
+    .fc .fc-daygrid-day-number, .fc .fc-daygrid-day-top {
+      font-size: 0.92rem !important;
+      padding: 0.1rem 0.1rem !important;
+    }
+    .fc .fc-scrollgrid-sync-table, .fc .fc-daygrid-body, .fc .fc-daygrid-body table {
+      width: 100vw !important;
+      min-width: 0 !important;
+      max-width: 100vw !important;
+      table-layout: fixed !important;
+    }
+    .fc .fc-col-header-cell {
+      font-size: 0.92rem !important;
+      padding: 0.1rem 0.1rem !important;
+    }
+    .fc .fc-daygrid-day-events {
+      font-size: 0.92rem !important;
+      padding: 0.1rem 0.1rem !important;
+    }
+    .fc .fc-daygrid-event {
+      font-size: 0.92rem !important;
+      padding: 0.1rem 0.1rem !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
     }
   }
   @media (max-width: 700px) {
@@ -680,6 +742,97 @@ h2 {
     .tarea-movil-link .hora-y-botones .btn-llamar {
       margin-left: 2px;
       margin-right: 0;
+    }
+  }
+  @media (max-width: 700px) {
+    .fc-list-table th,
+    .fc-list-table td {
+      padding: 0.08rem 0.08rem !important;
+      font-size: 0.89rem !important;
+      white-space: nowrap !important;
+    }
+    .fc-list-table th[scope="col"]:nth-child(1),
+    .fc-list-table td.fc-list-event-time {
+      width: 32px !important;
+      min-width: 32px !important;
+      max-width: 32px !important;
+      text-align: center !important;
+    }
+    .fc-list-table th[scope="col"]:nth-child(2),
+    .fc-list-table td.fc-list-event-graphic {
+      width: 18px !important;
+      min-width: 18px !important;
+      max-width: 18px !important;
+      padding: 0 !important;
+    }
+    .fc-list-table th[scope="col"]:nth-child(3),
+    .fc-list-table td.fc-list-event-title {
+      max-width: 50vw !important;
+      min-width: 60px !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+    .fc-list-table th[scope="col"]:nth-child(4),
+    .fc-list-table td {
+      max-width: 60px !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+    .fc-list-event-title .btn,
+    .fc-list-event-title .btn-sm {
+      font-size: 1.05em !important;
+      padding: 0.18rem 0.25rem !important;
+      min-width: 24px !important;
+      min-height: 24px !important;
+      height: 24px !important;
+      width: 24px !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px !important;
+      margin-left: 2px;
+    }
+    .fc-list-event-title i {
+      font-size: 1.1em !important;
+      margin: 0 !important;
+    }
+    .fc-list-table th[scope="col"]:nth-child(4),
+    .fc-list-table th[scope="col"]:nth-child(5) {
+      text-align: center !important;
+    }
+  }
+  @media (max-width: 700px) {
+    /* Vistas semana y mes a pantalla completa y compactas */
+    .fc .fc-daygrid-day-frame, .fc .fc-daygrid-day {
+      min-width: 0 !important;
+      padding: 0.1rem 0.1rem !important;
+    }
+    .fc .fc-daygrid-day-number, .fc .fc-daygrid-day-top {
+      font-size: 0.92rem !important;
+      padding: 0.1rem 0.1rem !important;
+    }
+    .fc .fc-scrollgrid-sync-table, .fc .fc-daygrid-body, .fc .fc-daygrid-body table {
+      width: 100vw !important;
+      min-width: 0 !important;
+      max-width: 100vw !important;
+      table-layout: fixed !important;
+    }
+    .fc .fc-col-header-cell {
+      font-size: 0.92rem !important;
+      padding: 0.1rem 0.1rem !important;
+    }
+    .fc .fc-daygrid-day-events {
+      font-size: 0.92rem !important;
+      padding: 0.1rem 0.1rem !important;
+    }
+    .fc .fc-daygrid-event {
+      font-size: 0.92rem !important;
+      padding: 0.1rem 0.1rem !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
     }
   }
 } 
