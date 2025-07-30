@@ -200,7 +200,16 @@ document.addEventListener('click', function(e) {
     const btn = e.target.closest('.encuesta-btn');
     const telefono = btn.getAttribute('data-telefono');
     const clienteId = btn.getAttribute('data-cliente-id');
-    const texto = encodeURIComponent(`encuesta https://metro2-9bxg.onrender.com/formulario?cliente_id=${clienteId}`);
+    const texto = encodeURIComponent(`Hola. 
+Gracias por visitar el inmueble con Metro Cuadrado Mérida. 
+Queremos brindarte la mejor atención posible y por eso nos encantaría saber como fue tu experiencia y como te sentiste durante la visita. 
+
+Solo tienes que contestar a una pregunta muy breve: 
+👉 https://metro2-9bxg.onrender.com/formulario?cliente_id=${clienteId}
+
+¡Vuestra opinión nos ayuda a mejorar cada día!
+
+Un saludo, el equipo de Metro Cuadrado Mérida.`);
     const businessUrl = `whatsapp://send?phone=${telefono}&text=${texto}`;
     const personalUrl = `https://wa.me/${telefono}?text=${texto}`;
     window.open(businessUrl, '_blank');

@@ -105,13 +105,35 @@ def clientes():
     if interes:
         query = query.filter(Cliente.interes != None).filter(Cliente.interes.like(f"%{interes}%"))
     clientes = query.all()
-    # Ordenar por fecha y hora de la última tarea (más reciente primero)
+    # Ordenar por actividad reciente: tareas, eventos y modificaciones
     from datetime import datetime, time
-    def fecha_hora_ultima_tarea(cliente):
+    def fecha_ultima_actividad(cliente):
+        fechas_actividad = []
+        
+        # Última tarea
         if cliente.tareas:
-            return max((datetime.combine(t.fecha, t.hora or time.min) for t in cliente.tareas if t.fecha), default=None)
-        return None
-    clientes.sort(key=lambda c: fecha_hora_ultima_tarea(c) or datetime.min, reverse=True)
+            ultima_tarea = max((datetime.combine(t.fecha, t.hora or time.min) for t in cliente.tareas if t.fecha), default=None)
+            if ultima_tarea:
+                fechas_actividad.append(ultima_tarea)
+        
+        # Último evento
+        if cliente.eventos:
+            ultimo_evento = max((datetime.combine(e.fecha, e.hora_inicio or time.min) for e in cliente.eventos if e.fecha), default=None)
+            if ultimo_evento:
+                fechas_actividad.append(ultimo_evento)
+        
+        # Fecha de creación (actividad inicial)
+        if cliente.fecha_creacion:
+            fechas_actividad.append(cliente.fecha_creacion)
+        
+        # Fecha de modificación (última edición)
+        if cliente.fecha_modificacion:
+            fechas_actividad.append(cliente.fecha_modificacion)
+        
+        # Retornar la fecha más reciente de todas las actividades
+        return max(fechas_actividad) if fechas_actividad else None
+    
+    clientes.sort(key=lambda c: fecha_ultima_actividad(c) or datetime.min, reverse=True)
     usuarios_dict = {u.id: u.nombre for u in Usuario.query.all()}
     return render_template('clientes.html', clientes=clientes, usuarios_dict=usuarios_dict)
 

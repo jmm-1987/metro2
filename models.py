@@ -37,6 +37,7 @@ class Cliente(db.Model):
     encuesta_enviada = db.Column(db.String(20), default="sin_enviar")
     comercial_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_modificacion = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     activo = db.Column(db.Boolean, default=True)  # Nuevo campo para desactivar cliente
     eventos = db.relationship('Evento', backref='cliente', lazy=True)
     tareas = db.relationship('Tarea', back_populates='cliente')
