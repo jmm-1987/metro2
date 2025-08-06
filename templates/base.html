@@ -101,8 +101,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Función para verificar si el elemento está en el formulario de login
+    function esFormularioLogin(elemento) {
+        // Verificar si está en la página de login o si tiene clases específicas del login
+        return window.location.pathname === '/login' || 
+               elemento.closest('form')?.action?.includes('login') ||
+               elemento.closest('.login-form') ||
+               elemento.closest('#loginForm');
+    }
+    
     // Convertir a mayúsculas al escribir (input y textarea)
     document.addEventListener('input', function(e) {
+        // No convertir si está en el formulario de login
+        if (esFormularioLogin(e.target)) {
+            return;
+        }
+        
         if (e.target.tagName === 'INPUT' && e.target.type !== 'password' && e.target.type !== 'email' && e.target.type !== 'number' && e.target.type !== 'tel' && e.target.type !== 'url' && e.target.type !== 'date' && e.target.type !== 'time' && e.target.type !== 'datetime-local' && e.target.type !== 'file' && e.target.type !== 'checkbox' && e.target.type !== 'radio' && e.target.type !== 'submit' && e.target.type !== 'button' && e.target.type !== 'reset' && e.target.type !== 'hidden') {
             convertirAMayusculas(e.target);
         }
@@ -113,6 +127,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Convertir a mayúsculas al perder el foco (input y textarea)
     document.addEventListener('blur', function(e) {
+        // No convertir si está en el formulario de login
+        if (esFormularioLogin(e.target)) {
+            return;
+        }
+        
         if (e.target.tagName === 'INPUT' && e.target.type !== 'password' && e.target.type !== 'email' && e.target.type !== 'number' && e.target.type !== 'tel' && e.target.type !== 'url' && e.target.type !== 'date' && e.target.type !== 'time' && e.target.type !== 'datetime-local' && e.target.type !== 'file' && e.target.type !== 'checkbox' && e.target.type !== 'radio' && e.target.type !== 'submit' && e.target.type !== 'button' && e.target.type !== 'reset' && e.target.type !== 'hidden') {
             convertirAMayusculas(e.target);
         }
@@ -123,6 +142,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Convertir a mayúsculas al pegar texto
     document.addEventListener('paste', function(e) {
+        // No convertir si está en el formulario de login
+        if (esFormularioLogin(e.target)) {
+            return;
+        }
+        
         if (e.target.tagName === 'INPUT' && e.target.type !== 'password' && e.target.type !== 'email' && e.target.type !== 'number' && e.target.type !== 'tel' && e.target.type !== 'url' && e.target.type !== 'date' && e.target.type !== 'time' && e.target.type !== 'datetime-local' && e.target.type !== 'file' && e.target.type !== 'checkbox' && e.target.type !== 'radio' && e.target.type !== 'submit' && e.target.type !== 'button' && e.target.type !== 'reset' && e.target.type !== 'hidden') {
             setTimeout(function() {
                 convertirAMayusculas(e.target);
