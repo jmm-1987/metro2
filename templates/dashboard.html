@@ -26,6 +26,161 @@
   window.esAdmin = {{ es_admin|tojson }};
 </script>
 <script>
+  // Función global para enviar encuesta
+  function enviarEncuesta(telefono, clienteId) {
+    console.log('Función enviarEncuesta llamada con:', telefono, clienteId);
+    
+    if (!clienteId) {
+      alert('No se pudo identificar el cliente para enviar la encuesta.');
+      return;
+    }
+    
+    // Limpiar y formatear el número de teléfono
+    let telefonoLimpio = telefono.replace(/[^\d+]/g, ''); // Solo números y +
+    
+    // Si no empieza con +, agregar +34 (España)
+    if (!telefonoLimpio.startsWith('+')) {
+      // Si empieza con 6 y tiene 9 dígitos, es español
+      if (telefonoLimpio.startsWith('6') && telefonoLimpio.length === 9) {
+        telefonoLimpio = '+34' + telefonoLimpio;
+      } else if (telefonoLimpio.startsWith('34') && telefonoLimpio.length === 11) {
+        telefonoLimpio = '+' + telefonoLimpio;
+      } else if (telefonoLimpio.length === 9) {
+        telefonoLimpio = '+34' + telefonoLimpio;
+      }
+    }
+    
+    // Verificar que el número sea válido
+    if (!telefonoLimpio || telefonoLimpio.length < 10) {
+      alert('Número de teléfono inválido: ' + telefono);
+      return;
+    }
+    
+    const texto = encodeURIComponent('Hola. ' +
+'Gracias por visitar el inmueble con Metro Cuadrado Mérida. ' +
+'Queremos brindarte la mejor atención posible y por eso nos encantaría saber como fue tu experiencia y como te sentiste durante la visita. ' +
+'' +
+'Solo tienes que contestar a una pregunta muy breve: ' +
+'👉 https://metro2-9bxg.onrender.com/formulario?cliente_id=' + clienteId + ' ' +
+'' +
+'¡Vuestra opinión nos ayuda a mejorar cada día! ' +
+'' +
+'Un saludo, el equipo de Metro Cuadrado Mérida.');
+    
+    const businessUrl = `whatsapp://send?phone=${telefonoLimpio}&text=${texto}`;
+    const personalUrl = `https://wa.me/${telefonoLimpio}?text=${texto}`;
+    
+    // Intentar abrir WhatsApp
+    window.open(businessUrl, '_blank');
+    setTimeout(() => {
+      window.open(personalUrl, '_blank');
+    }, 500);
+    
+    // Esperar 5 segundos y luego preguntar si se marcó como enviada
+    setTimeout(() => {
+      console.log('Mostrando confirmación de envío de encuesta...');
+      
+      // Crear un modal personalizado en lugar de usar confirm()
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      `;
+      
+      const modalContent = document.createElement('div');
+      modalContent.style.cssText = `
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        max-width: 400px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      `;
+      
+      modalContent.innerHTML = `
+        <h4 style="margin-bottom: 20px; color: #333;">Confirmar envío de encuesta</h4>
+        <p style="margin-bottom: 25px; color: #666; line-height: 1.5;">
+          ¿Quieres marcar la encuesta como enviada?<br><br>
+          <strong>Si la encuesta se envió correctamente</strong>, haz clic en "Sí".<br>
+          <strong>Si hubo algún problema</strong>, haz clic en "No".
+        </p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <button id="btn-confirmar-si" style="
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+          ">Sí, marcar como enviada</button>
+          <button id="btn-confirmar-no" style="
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+          ">No, hubo problemas</button>
+        </div>
+      `;
+      
+      modal.appendChild(modalContent);
+      document.body.appendChild(modal);
+      
+      // Event listeners para los botones
+      document.getElementById('btn-confirmar-si').addEventListener('click', function() {
+        console.log('Usuario confirmó envío de encuesta');
+        document.body.removeChild(modal);
+        
+        console.log('Marcando encuesta como enviada...');
+        // Guardar en la base de datos
+        fetch(`/api/marcar_encuesta_enviada/${clienteId}`, {
+          method: 'POST', 
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => {
+          console.log('Respuesta del servidor:', response);
+          return response.json();
+        })
+        .then(data => {
+          console.log('Datos de respuesta:', data);
+          if (!data.success) {
+            alert('No se pudo actualizar el estado de la encuesta en la base de datos: ' + (data.error || 'Error desconocido'));
+          } else {
+            console.log('Encuesta marcada como enviada correctamente');
+            // Refrescar el calendario para mostrar los cambios
+            if (typeof calendar !== 'undefined') {
+              calendar.refetchEvents();
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error al marcar encuesta como enviada:', error);
+          alert('Error al conectar con el servidor: ' + error.message);
+        });
+      });
+      
+      document.getElementById('btn-confirmar-no').addEventListener('click', function() {
+        console.log('Usuario canceló el marcado de encuesta como enviada');
+        document.body.removeChild(modal);
+      });
+      
+    }, 5000); // 5 segundos de espera
+  }
+
   let mostrarResueltas = false;
   let calendar;
   document.addEventListener('DOMContentLoaded', function() {
@@ -192,12 +347,29 @@
           let cliente = arg.event.extendedProps.cliente || '';
           let clienteHtml = cliente;
           let telefono = arg.event.extendedProps.telefono || '';
+          let clienteId = arg.event.extendedProps.cliente_id || '';
+          let encuestaEnviada = arg.event.extendedProps.encuesta_enviada || '';
           let whatsappBtn = '';
+          let encuestaBtn = '';
+          
           if (telefono) {
             let telClean = telefono.replace(/[^\d]/g, '');
             whatsappBtn = `<a href='https://wa.me/${telClean}' target='_blank' title='Enviar WhatsApp' class='btn btn-outline-success btn-sm whatsapp-btn' style='padding: 0.25rem 0.5rem;' onclick='event.stopPropagation(); event.preventDefault(); window.open(this.href, "_blank"); return false;'><i class='bi bi-whatsapp'></i></a>`;
+            
+            // Botón de encuesta - solo mostrar si no está respondida
+            if (encuestaEnviada !== "respondida") {
+              const title = encuestaEnviada === 'enviada' ? 'Volver a enviar encuesta' : 'Enviar encuesta';
+              const btnClass = encuestaEnviada === 'enviada' ? 'btn-outline-warning' : 'btn-outline-info';
+              const icon = encuestaEnviada === 'enviada' ? 'bi-hourglass-split' : 'bi-clipboard-check';
+              encuestaBtn = `<a href="#" class="btn ${btnClass} btn-sm encuesta-btn" style="padding: 0.25rem 0.5rem;" data-telefono="${telefono}" data-cliente-id="${clienteId}" title="${title}" onclick="event.stopPropagation(); enviarEncuesta('${telefono}', '${clienteId}');"><i class="bi ${icon}"></i></a>`;
+              console.log('Generando botón de encuesta para cliente:', clienteId, 'teléfono:', telefono, 'estado:', encuestaEnviada);
+            } else {
+              encuestaBtn = `<span style='width: 32px; height: 32px; display: inline-block;'></span>`;
+              console.log('Encuesta ya respondida para cliente:', clienteId, 'no se muestra botón');
+            }
           } else {
             whatsappBtn = `<span style='width: 32px; height: 32px; display: inline-block;'></span>`;
+            encuestaBtn = `<span style='width: 32px; height: 32px; display: inline-block;'></span>`;
           }
 
           // Detectar si la tarea está resuelta para tachar
@@ -217,6 +389,7 @@
                   <i class="bi bi-pencil-square"></i>
                 </a>
                 ${whatsappBtn}
+                ${encuestaBtn}
               </div>
               <div style="width: 120px; min-width: 120px; max-width: 120px; text-align:center; color:${estadoColor}; padding: 0.5rem 0.25rem; word-wrap: break-word;">${estadoBadge}</div>
             </div>
@@ -255,6 +428,15 @@
       }
     });
     calendar.render();
+    
+    // Test para verificar que los botones de encuesta existen
+    setTimeout(() => {
+      const encuestaBtns = document.querySelectorAll('.encuesta-btn');
+      console.log('Botones de encuesta encontrados:', encuestaBtns.length);
+      encuestaBtns.forEach((btn, index) => {
+        console.log(`Botón ${index}:`, btn.getAttribute('data-cliente-id'), btn.getAttribute('data-telefono'));
+      });
+    }, 2000);
 
     document.getElementById('toggle-resueltas').addEventListener('click', function() {
       mostrarResueltas = !mostrarResueltas;
@@ -277,6 +459,7 @@
     } else {
       document.querySelector('.barra-navegacion-movil').style.display = 'none';
     }
+
   });
 </script>
 

@@ -523,7 +523,9 @@ def api_events():
             'extendedProps': {
                 'comercial': tarea.usuario.nombre if tarea.usuario else '',
                 'cliente': tarea.cliente.nombre if tarea.cliente else '',
+                'cliente_id': tarea.cliente.id if tarea.cliente else None,
                 'telefono': tarea.cliente.telefono if tarea.cliente and tarea.cliente.telefono else '',
+                'encuesta_enviada': tarea.cliente.encuesta_enviada if tarea.cliente else None,
                 'estado': 'Por hacer',
                 'isHeader': False
             }
@@ -542,7 +544,9 @@ def api_events():
                 'extendedProps': {
                     'comercial': tarea.usuario.nombre if tarea.usuario else '',
                     'cliente': tarea.cliente.nombre if tarea.cliente else '',
+                    'cliente_id': tarea.cliente.id if tarea.cliente else None,
                     'telefono': tarea.cliente.telefono if tarea.cliente and tarea.cliente.telefono else '',
+                    'encuesta_enviada': tarea.cliente.encuesta_enviada if tarea.cliente else None,
                     'estado': 'Ha comprado' if tarea.estado == 'ha_comprado' else (
                         'Ha alquilado' if tarea.estado == 'ha_alquilado' else (
                         'Cancelado' if tarea.estado == 'cancelado' else tarea.estado)),

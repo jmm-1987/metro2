@@ -242,20 +242,114 @@ document.addEventListener('click', function(e) {
       window.open(personalUrl, '_blank');
     }, 500);
     
-    // Actualizar el estado en el array y refrescar la tabla
-    const idx = clientes.findIndex(c => c.id == clienteId);
-    if (idx !== -1) {
-      clientes[idx].encuesta_enviada = "enviada";
-      filtrarClientes();
-      // Guardar en la base de datos
-      fetch(`/api/marcar_encuesta_enviada/${clienteId}`, {method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest'}})
-        .then(r => r.json())
-        .then(data => {
-          if (!data.success) {
-            alert('No se pudo actualizar el estado de la encuesta en la base de datos.');
-          }
-        });
-    }
+    // Esperar 5 segundos y luego preguntar si se marcó como enviada
+    setTimeout(() => {
+      console.log('Mostrando confirmación de envío de encuesta...');
+      
+      // Crear un modal personalizado en lugar de usar confirm()
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      `;
+      
+      const modalContent = document.createElement('div');
+      modalContent.style.cssText = `
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        max-width: 400px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      `;
+      
+      modalContent.innerHTML = `
+        <h4 style="margin-bottom: 20px; color: #333;">Confirmar envío de encuesta</h4>
+        <p style="margin-bottom: 25px; color: #666; line-height: 1.5;">
+          ¿Quieres marcar la encuesta como enviada?<br><br>
+          <strong>Si la encuesta se envió correctamente</strong>, haz clic en "Sí".<br>
+          <strong>Si hubo algún problema</strong>, haz clic en "No".
+        </p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <button id="btn-confirmar-si" style="
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+          ">Sí, marcar como enviada</button>
+          <button id="btn-confirmar-no" style="
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+          ">No, hubo problemas</button>
+        </div>
+      `;
+      
+      modal.appendChild(modalContent);
+      document.body.appendChild(modal);
+      
+      // Event listeners para los botones
+      document.getElementById('btn-confirmar-si').addEventListener('click', function() {
+        console.log('Usuario confirmó envío de encuesta');
+        document.body.removeChild(modal);
+        
+        console.log('Marcando encuesta como enviada...');
+        // Actualizar el estado en el array y refrescar la tabla
+        const idx = clientes.findIndex(c => c.id == clienteId);
+        if (idx !== -1) {
+          clientes[idx].encuesta_enviada = "enviada";
+          filtrarClientes();
+          // Guardar en la base de datos
+          fetch(`/api/marcar_encuesta_enviada/${clienteId}`, {
+            method: 'POST', 
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(response => {
+            console.log('Respuesta del servidor:', response);
+            return response.json();
+          })
+          .then(data => {
+            console.log('Datos de respuesta:', data);
+            if (!data.success) {
+              alert('No se pudo actualizar el estado de la encuesta en la base de datos: ' + (data.error || 'Error desconocido'));
+            } else {
+              console.log('Encuesta marcada como enviada correctamente');
+            }
+          })
+          .catch(error => {
+            console.error('Error al marcar encuesta como enviada:', error);
+            alert('Error al conectar con el servidor: ' + error.message);
+          });
+        } else {
+          console.error('Cliente no encontrado en el array local');
+          alert('Error: Cliente no encontrado en la lista local');
+        }
+      });
+      
+      document.getElementById('btn-confirmar-no').addEventListener('click', function() {
+        console.log('Usuario canceló el marcado de encuesta como enviada');
+        document.body.removeChild(modal);
+      });
+      
+    }, 5000); // 5 segundos de espera
   }
 });
 </script>
