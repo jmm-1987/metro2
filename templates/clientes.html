@@ -200,22 +200,48 @@ document.addEventListener('click', function(e) {
     const btn = e.target.closest('.encuesta-btn');
     const telefono = btn.getAttribute('data-telefono');
     const clienteId = btn.getAttribute('data-cliente-id');
-    const texto = encodeURIComponent(`Hola. 
-Gracias por visitar el inmueble con Metro Cuadrado Mérida. 
-Queremos brindarte la mejor atención posible y por eso nos encantaría saber como fue tu experiencia y como te sentiste durante la visita. 
-
-Solo tienes que contestar a una pregunta muy breve: 
-👉 https://metro2-9bxg.onrender.com/formulario?cliente_id=${clienteId}
-
-¡Vuestra opinión nos ayuda a mejorar cada día!
-
-Un saludo, el equipo de Metro Cuadrado Mérida.`);
-    const businessUrl = `whatsapp://send?phone=${telefono}&text=${texto}`;
-    const personalUrl = `https://wa.me/${telefono}?text=${texto}`;
+    
+    // Limpiar y formatear el número de teléfono
+    let telefonoLimpio = telefono.replace(/[^\d+]/g, ''); // Solo números y +
+    
+    // Si no empieza con +, agregar +34 (España)
+    if (!telefonoLimpio.startsWith('+')) {
+      // Si empieza con 6 y tiene 9 dígitos, es español
+      if (telefonoLimpio.startsWith('6') && telefonoLimpio.length === 9) {
+        telefonoLimpio = '+34' + telefonoLimpio;
+      } else if (telefonoLimpio.startsWith('34') && telefonoLimpio.length === 11) {
+        telefonoLimpio = '+' + telefonoLimpio;
+      } else if (telefonoLimpio.length === 9) {
+        telefonoLimpio = '+34' + telefonoLimpio;
+      }
+    }
+    
+    // Verificar que el número sea válido
+    if (!telefonoLimpio || telefonoLimpio.length < 10) {
+      alert('Número de teléfono inválido: ' + telefono);
+      return;
+    }
+    
+    const texto = encodeURIComponent('Hola. ' +
+'Gracias por visitar el inmueble con Metro Cuadrado Mérida. ' +
+'Queremos brindarte la mejor atención posible y por eso nos encantaría saber como fue tu experiencia y como te sentiste durante la visita. ' +
+'' +
+'Solo tienes que contestar a una pregunta muy breve: ' +
+'👉 https://metro2-9bxg.onrender.com/formulario?cliente_id=' + clienteId + ' ' +
+'' +
+'¡Vuestra opinión nos ayuda a mejorar cada día! ' +
+'' +
+'Un saludo, el equipo de Metro Cuadrado Mérida.');
+    
+    const businessUrl = `whatsapp://send?phone=${telefonoLimpio}&text=${texto}`;
+    const personalUrl = `https://wa.me/${telefonoLimpio}?text=${texto}`;
+    
+    // Intentar abrir WhatsApp
     window.open(businessUrl, '_blank');
     setTimeout(() => {
       window.open(personalUrl, '_blank');
     }, 500);
+    
     // Actualizar el estado en el array y refrescar la tabla
     const idx = clientes.findIndex(c => c.id == clienteId);
     if (idx !== -1) {
