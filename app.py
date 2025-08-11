@@ -741,6 +741,41 @@ def marcar_encuesta_enviada(cliente_id):
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/actividad_cliente/<int:cliente_id>')
+@login_required
+def actividad_cliente(cliente_id):
+    try:
+        cliente = Cliente.query.get_or_404(cliente_id)
+        
+        # Verificar permisos: solo el comercial asignado o admin puede ver la actividad
+        if not current_user.es_admin and cliente.comercial_id != current_user.id:
+            return jsonify({'error': 'No tienes permisos para ver la actividad de este cliente'}), 403
+        
+        # Obtener tareas del cliente
+        tareas = Tarea.query.filter_by(cliente_id=cliente_id).order_by(Tarea.fecha.desc(), Tarea.hora.desc() if Tarea.hora else Tarea.fecha.desc()).all()
+        
+        # Por ahora solo devolvemos las tareas, ya que no hay sistema de registros implementado
+        tareas_data = []
+        for tarea in tareas:
+            tarea_info = {
+                'id': tarea.id,
+                'fecha': tarea.fecha.isoformat() if tarea.fecha else None,
+                'hora': tarea.hora.isoformat() if tarea.hora else None,
+                'comentario': tarea.comentario,
+                'estado': tarea.estado
+            }
+            tareas_data.append(tarea_info)
+        
+        return jsonify({
+            'cliente_id': cliente_id,
+            'cliente_nombre': cliente.nombre,
+            'tareas': tareas_data,
+            'registros': []  # Por ahora vacío, se puede expandir en el futuro
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Error al obtener la actividad del cliente: {str(e)}'}), 500
+
 
 if __name__ == '__main__':
     with app.app_context():

@@ -314,7 +314,7 @@
                   <div style="width: 140px; min-width: 140px; max-width: 140px; text-align:center; padding: 0.5rem 0.25rem; word-wrap: break-word;">Comercial</div>
                   <div style="width: 180px; min-width: 180px; max-width: 180px; text-align:center; padding: 0.5rem 0.25rem; word-wrap: break-word;">Cliente</div>
                   <div class="flex-grow-1" style="min-width: 200px; text-align:center; padding: 0.5rem 0.25rem; word-wrap: break-word;">Tarea</div>
-                  <div style="width: 120px; min-width: 120px; max-width: 120px; text-align:center; padding: 0.5rem 0.25rem; word-wrap: break-word;">Acciones</div>
+                  <div style="width: 140px; min-width: 140px; max-width: 140px; text-align:center; padding: 0.5rem 0.25rem; word-wrap: break-word;">Acciones</div>
                   <div style="width: 120px; min-width: 120px; max-width: 120px; text-align:center; padding: 0.5rem 0.25rem; word-wrap: break-word;">Estado</div>
                 </div>
               `
@@ -384,12 +384,15 @@
               <div style="width: 140px; min-width: 140px; max-width: 140px; text-align:center; padding: 0.5rem 0.25rem; word-wrap: break-word;">${arg.event.extendedProps.comercial || ''}</div>
               <div style="width: 180px; min-width: 180px; max-width: 180px; text-align:center; padding: 0.5rem 0.25rem; word-wrap: break-word;">${clienteHtml}</div>
               <div class="flex-grow-1" style="min-width: 200px; text-align:center; padding: 0.5rem 0.25rem; word-wrap: break-word;">${tareaHtml}</div>
-              <div style="width: 120px; min-width: 120px; max-width: 120px; display: flex; justify-content: center; align-items: center; gap: 0.25rem; padding: 0.5rem 0.25rem;">
+              <div style="width: 140px; min-width: 140px; max-width: 140px; display: flex; justify-content: center; align-items: center; gap: 0.25rem; padding: 0.5rem 0.25rem;">
                 <a href="${arg.event.url}" class="btn btn-outline-primary btn-sm" title="Resolver" style="padding: 0.25rem 0.5rem;">
                   <i class="bi bi-pencil-square"></i>
                 </a>
                 ${whatsappBtn}
                 ${encuestaBtn}
+                <a href="#" class="btn btn-outline-secondary btn-sm" title="Ver actividad del cliente" style="padding: 0.25rem 0.5rem;" onclick="event.stopPropagation(); console.log('Click en botón actividad, clienteId:', '${clienteId}', 'cliente:', '${cliente}'); mostrarActividadCliente('${clienteId}', '${cliente}');">
+                  <i class="bi bi-clock-history"></i>
+                </a>
               </div>
               <div style="width: 120px; min-width: 120px; max-width: 120px; text-align:center; color:${estadoColor}; padding: 0.5rem 0.25rem; word-wrap: break-word;">${estadoBadge}</div>
             </div>
@@ -418,7 +421,7 @@
               <div style="width: 140px; min-width: 140px; max-width: 140px; text-align:center; padding: 0.5rem 0.25rem; word-wrap: break-word;">Comercial</div>
               <div style="width: 180px; min-width: 180px; max-width: 180px; text-align:center; padding: 0.5rem 0.25rem; word-wrap: break-word;">Cliente</div>
               <div class="flex-grow-1" style="min-width: 200px; text-align:center; padding: 0.5rem 0.25rem; word-wrap: break-word;">Tarea</div>
-              <div style="width: 120px; min-width: 120px; max-width: 120px; text-align:center; padding: 0.5rem 0.25rem; word-wrap: break-word;">Acciones</div>
+              <div style="width: 140px; min-width: 140px; max-width: 140px; text-align:center; padding: 0.5rem 0.25rem; word-wrap: break-word;">Acciones</div>
               <div style="width: 120px; min-width: 120px; max-width: 120px; text-align:center; padding: 0.5rem 0.25rem; word-wrap: break-word;">Estado</div>
             `;
             // Insertar después del título de la fecha
@@ -435,6 +438,14 @@
       console.log('Botones de encuesta encontrados:', encuestaBtns.length);
       encuestaBtns.forEach((btn, index) => {
         console.log(`Botón ${index}:`, btn.getAttribute('data-cliente-id'), btn.getAttribute('data-telefono'));
+      });
+      
+      // Test para verificar que los botones de actividad existen
+      const actividadBtns = document.querySelectorAll('[onclick*="mostrarActividadCliente"]');
+      console.log('Botones de actividad encontrados:', actividadBtns.length);
+      actividadBtns.forEach((btn, index) => {
+        const onclick = btn.getAttribute('onclick');
+        console.log(`Botón actividad ${index}:`, onclick);
       });
     }, 2000);
 
@@ -460,7 +471,174 @@
       document.querySelector('.barra-navegacion-movil').style.display = 'none';
     }
 
+
+
   });
+  
+  // Función global para mostrar la actividad del cliente
+  function mostrarActividadCliente(clienteId, nombreCliente) {
+    console.log('Función mostrarActividadCliente llamada con:', clienteId, nombreCliente);
+    
+    // Crear el modal
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = 'modalActividadCliente';
+    modal.setAttribute('tabindex', '-1');
+    modal.setAttribute('aria-labelledby', 'modalActividadClienteLabel');
+    modal.setAttribute('aria-hidden', 'true');
+    
+    modal.innerHTML = `
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header bg-info text-white">
+            <h5 class="modal-title" id="modalActividadClienteLabel">
+              <i class="bi bi-clock-history"></i> Actividad del cliente: ${nombreCliente}
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="contenidoActividadCliente">
+              <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2">Cargando actividad del cliente...</p>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Añadir el modal al body
+    document.body.appendChild(modal);
+    
+    // Mostrar el modal
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+    
+    // Cargar la actividad del cliente
+    console.log('Haciendo fetch a:', `/api/actividad_cliente/${clienteId}`);
+    fetch(`/api/actividad_cliente/${clienteId}`)
+      .then(response => {
+        console.log('Respuesta del servidor:', response);
+        return response.json();
+      })
+      .then(data => {
+        console.log('Datos recibidos:', data);
+        const contenido = document.getElementById('contenidoActividadCliente');
+        
+        if (data.error) {
+          contenido.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+          return;
+        }
+        
+        let html = '';
+        
+        // Mostrar registros del cliente
+        if (data.registros && data.registros.length > 0) {
+          html += '<h6 class="text-primary mb-3"><i class="bi bi-journal-text"></i> Registros del cliente</h6>';
+          html += '<ul class="list-group list-group-flush mb-4">';
+          data.registros.forEach(registro => {
+            console.log('Registro fecha raw:', registro.fecha, 'tipo:', typeof registro.fecha);
+            
+            // Manejo robusto de fechas para registros
+            let fechaFormateada = 'Fecha no disponible';
+            if (registro.fecha) {
+              try {
+                const fecha = new Date(registro.fecha);
+                if (!isNaN(fecha.getTime())) {
+                  fechaFormateada = fecha.toLocaleDateString('es-ES');
+                } else {
+                  console.warn('Fecha inválida en registro:', registro.fecha);
+                }
+              } catch (e) {
+                console.error('Error parseando fecha de registro:', e);
+              }
+            }
+            
+            html += `<li class="list-group-item d-flex justify-content-between align-items-start">
+              <div>
+                <strong>${fechaFormateada}</strong>: ${registro.comentario}
+              </div>
+            </li>`;
+          });
+          html += '</ul>';
+        }
+        
+        // Mostrar tareas del cliente
+        if (data.tareas && data.tareas.length > 0) {
+          html += '<h6 class="text-success mb-3"><i class="bi bi-list-task"></i> Tareas del cliente</h6>';
+          html += '<ul class="list-group list-group-flush">';
+          data.tareas.forEach(tarea => {
+            console.log('Tarea fecha raw:', tarea.fecha, 'tipo:', typeof tarea.fecha);
+            console.log('Tarea hora raw:', tarea.hora, 'tipo:', typeof tarea.hora);
+            
+            // Manejo robusto de fechas
+            let fechaFormateada = 'Fecha no disponible';
+            if (tarea.fecha) {
+              try {
+                const fecha = new Date(tarea.fecha);
+                if (!isNaN(fecha.getTime())) {
+                  fechaFormateada = fecha.toLocaleDateString('es-ES');
+                } else {
+                  console.warn('Fecha inválida:', tarea.fecha);
+                }
+              } catch (e) {
+                console.error('Error parseando fecha:', e);
+              }
+            }
+            
+            // Manejo robusto de horas
+            let horaFormateada = '';
+            if (tarea.hora) {
+              try {
+                const hora = new Date(tarea.hora);
+                if (!isNaN(hora.getTime())) {
+                  horaFormateada = hora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                } else {
+                  console.warn('Hora inválida:', tarea.hora);
+                }
+              } catch (e) {
+                console.error('Error parseando hora:', e);
+              }
+            }
+            
+            const estado = tarea.estado.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            
+            html += `<li class="list-group-item">
+              <div>
+                <strong>${fechaFormateada}</strong>
+                ${horaFormateada ? ` ${horaFormateada}` : ''}: ${tarea.comentario}
+                <span class="badge bg-secondary ms-2">${estado}</span>
+              </div>
+            </li>`;
+          });
+          html += '</ul>';
+        }
+        
+        if (!data.registros || data.registros.length === 0) {
+          if (!data.tareas || data.tareas.length === 0) {
+            html = '<div class="text-muted text-center">No hay actividad registrada para este cliente.</div>';
+          }
+        }
+        
+        contenido.innerHTML = html;
+      })
+      .catch(error => {
+        console.error('Error al cargar la actividad:', error);
+        const contenido = document.getElementById('contenidoActividadCliente');
+        contenido.innerHTML = '<div class="alert alert-danger">Error al cargar la actividad del cliente.</div>';
+      });
+    
+    // Limpiar el modal cuando se cierre
+    modal.addEventListener('hidden.bs.modal', function() {
+      document.body.removeChild(modal);
+    });
+  }
 </script>
 
 <style>
