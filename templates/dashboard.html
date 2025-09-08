@@ -17,6 +17,11 @@
       {% endfor %}
     </select>
     {% endif %}
+    {% if current_user.nombre == 'root' %}
+    <a href="{{ url_for('panel_respaldo') }}" class="btn btn-warning btn-sm ms-2" title="Panel de respaldo">
+      <i class="bi bi-shield-check"></i> <span class="btn-text">Respaldo</span>
+    </a>
+    {% endif %}
   </div>
   <div id='calendar' class="h-100"></div>
 </div>

@@ -68,6 +68,7 @@
   </div>
   <a href="/crear_cliente" class="btn btn-primary" style="height:38px;display:flex;align-items:center;align-self:end;margin-left:auto;"><i class="bi bi-person-plus"></i> Crear cliente</a>
 </form>
+
 <div class="table-responsive">
 <table class="table table-hover align-middle shadow-sm bg-white rounded" id="tabla-clientes" style="min-width:1300px;">
     <thead class="table-light">
@@ -92,6 +93,7 @@
 </table>
 </div>
 <script>
+// Datos de clientes optimizados - solo campos necesarios para filtrado
 const clientes = [
 {% for cliente in clientes %}
   {

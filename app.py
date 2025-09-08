@@ -16,6 +16,7 @@ from google_calendar import crear_evento_google_calendar
 from enviar_email import enviar_email
 import os
 from enviar_telegram import enviar_telegram
+from backup_manager import export_database_to_csv, import_database_from_csv, create_backup_zip
 
 # Cargar el token una vez al arrancar la app
 TOKEN_TELEGRAM = os.environ.get('TELEGRAM_BOT_TOKEN')
@@ -93,7 +94,13 @@ def clientes():
     tipo_cliente = request.args.get('tipo_cliente')
     interes = request.args.get('interes')
     mostrar_inactivos = request.args.get('inactivos') == '1'
-    query = Cliente.query
+    
+    # Construir query base con joinedload para evitar N+1 queries
+    query = Cliente.query.options(
+        joinedload(Cliente.tareas),
+        joinedload(Cliente.eventos)
+    )
+    
     if not mostrar_inactivos:
         query = query.filter_by(activo=True)
     if not current_user.es_admin:
@@ -104,37 +111,13 @@ def clientes():
         query = query.filter_by(tipo_cliente=tipo_cliente)
     if interes:
         query = query.filter(Cliente.interes != None).filter(Cliente.interes.like(f"%{interes}%"))
-    clientes = query.all()
-    # Ordenar por actividad reciente: tareas, eventos y modificaciones
-    from datetime import datetime, time
-    def fecha_ultima_actividad(cliente):
-        fechas_actividad = []
-        
-        # Última tarea
-        if cliente.tareas:
-            ultima_tarea = max((datetime.combine(t.fecha, t.hora or time.min) for t in cliente.tareas if t.fecha), default=None)
-            if ultima_tarea:
-                fechas_actividad.append(ultima_tarea)
-        
-        # Último evento
-        if cliente.eventos:
-            ultimo_evento = max((datetime.combine(e.fecha, e.hora_inicio or time.min) for e in cliente.eventos if e.fecha), default=None)
-            if ultimo_evento:
-                fechas_actividad.append(ultimo_evento)
-        
-        # Fecha de creación (actividad inicial)
-        if cliente.fecha_creacion:
-            fechas_actividad.append(cliente.fecha_creacion)
-        
-        # Fecha de modificación (última edición)
-        if cliente.fecha_modificacion:
-            fechas_actividad.append(cliente.fecha_modificacion)
-        
-        # Retornar la fecha más reciente de todas las actividades
-        return max(fechas_actividad) if fechas_actividad else None
     
-    clientes.sort(key=lambda c: fecha_ultima_actividad(c) or datetime.min, reverse=True)
-    usuarios_dict = {u.id: u.nombre for u in Usuario.query.all()}
+    # Ordenar directamente en la base de datos por fecha_modificacion (más eficiente)
+    clientes = query.order_by(Cliente.fecha_modificacion.desc(), Cliente.fecha_creacion.desc()).all()
+    
+    # Obtener usuarios de forma más eficiente
+    usuarios_dict = {u.id: u.nombre for u in Usuario.query.filter_by(activo=True).all()}
+    
     return render_template('clientes.html', clientes=clientes, usuarios_dict=usuarios_dict)
 
 @app.route('/usuarios')
@@ -304,11 +287,16 @@ def crear_tarea():
                 form.cliente_id.data = cliente.id
                 form.cliente_nombre.data = f"{cliente.nombre} ({cliente.telefono})"
     if form.validate_on_submit():
+        # Validar que se haya seleccionado un cliente
+        if not form.cliente_id.data or form.cliente_id.data == '':
+            flash('Debe seleccionar un cliente para crear la tarea', 'error')
+            return render_template('crear_tarea.html', form=form, current_user=current_user, usuarios=usuarios)
+        
         # Convertir la hora de string a objeto time
         hora_obj = datetime.datetime.strptime(form.hora.data, "%H:%M").time()
         tarea = Tarea(
             usuario_id=form.usuario_id.data,
-            cliente_id=form.cliente_id.data if form.cliente_id.data else None,
+            cliente_id=form.cliente_id.data,
             fecha=form.fecha.data,
             hora=hora_obj,
             comentario=form.comentario.data,
@@ -383,6 +371,11 @@ def editar_tarea(tarea_id):
             form.hora.data = tarea.hora.strftime('%H:%M') if tarea.hora else None
             form.comentario.data = tarea.comentario
         if form.validate_on_submit():
+            # Validar que se haya seleccionado un cliente
+            if not form.cliente_id.data or form.cliente_id.data == '':
+                flash('Debe seleccionar un cliente para la tarea', 'error')
+                return render_template('editar_tarea.html', form=form, tarea=tarea, tarea_resuelta=tarea_resuelta, modo='editar')
+            
             tarea.fecha = form.fecha.data
             from datetime import datetime
             if isinstance(form.hora.data, str):
@@ -390,6 +383,7 @@ def editar_tarea(tarea_id):
             else:
                 tarea.hora = form.hora.data
             tarea.comentario = form.comentario.data
+            tarea.cliente_id = form.cliente_id.data
             try:
                 db.session.commit()
                 # Crear un nuevo evento en Google Calendar tras editar
@@ -775,6 +769,96 @@ def actividad_cliente(cliente_id):
         
     except Exception as e:
         return jsonify({'error': f'Error al obtener la actividad del cliente: {str(e)}'}), 500
+
+@app.route('/exportar_base_datos')
+@login_required
+def exportar_base_datos():
+    """Exportar toda la base de datos a CSV (solo root)"""
+    if current_user.nombre != 'root':
+        flash('Solo el usuario root puede exportar la base de datos.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    try:
+        csv_data = export_database_to_csv()
+        
+        # Crear respuesta ZIP
+        zip_buffer = create_backup_zip()
+        
+        # Generar nombre de archivo con fecha
+        fecha = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        nombre_archivo = f'backup_metro2_{fecha}.zip'
+        
+        return send_file(
+            zip_buffer,
+            as_attachment=True,
+            download_name=nombre_archivo,
+            mimetype='application/zip'
+        )
+    except Exception as e:
+        flash(f'Error al exportar la base de datos: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
+
+@app.route('/importar_base_datos', methods=['GET', 'POST'])
+@login_required
+def importar_base_datos():
+    """Importar base de datos desde archivos CSV (solo root)"""
+    if current_user.nombre != 'root':
+        flash('Solo el usuario root puede importar la base de datos.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        try:
+            # Verificar que se subieron archivos
+            if 'archivos' not in request.files:
+                flash('No se seleccionaron archivos.', 'error')
+                return redirect(url_for('importar_base_datos'))
+            
+            archivos = request.files.getlist('archivos')
+            csv_files = {}
+            
+            # Procesar cada archivo CSV
+            for archivo in archivos:
+                if archivo and archivo.filename.endswith('.csv'):
+                    # Leer el contenido del archivo
+                    contenido = archivo.read().decode('utf-8')
+                    nombre_tabla = archivo.filename.replace('.csv', '')
+                    csv_files[nombre_tabla] = contenido
+            
+            if not csv_files:
+                flash('No se encontraron archivos CSV válidos.', 'error')
+                return redirect(url_for('importar_base_datos'))
+            
+            # Importar los datos
+            success, mensaje = import_database_from_csv(csv_files)
+            
+            if success:
+                flash(f'Base de datos importada correctamente: {mensaje}', 'success')
+            else:
+                flash(f'Error al importar: {mensaje}', 'error')
+                
+        except Exception as e:
+            flash(f'Error al procesar la importación: {str(e)}', 'error')
+    
+    return render_template('importar_base_datos.html')
+
+@app.route('/panel_respaldo')
+@login_required
+def panel_respaldo():
+    """Panel de respaldo para el usuario root"""
+    if current_user.nombre != 'root':
+        flash('Solo el usuario root puede acceder al panel de respaldo.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Obtener estadísticas de la base de datos
+    stats = {
+        'usuarios': Usuario.query.count(),
+        'clientes': Cliente.query.count(),
+        'tareas': Tarea.query.count(),
+        'eventos': Evento.query.count(),
+        'respuestas': RespuestaFormulario.query.count()
+    }
+    
+    return render_template('panel_respaldo.html', stats=stats)
 
 
 if __name__ == '__main__':

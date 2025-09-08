@@ -21,9 +21,9 @@
       <div class="d-flex align-items-center gap-3 mb-3">
           <i class="bi bi-person fs-3 text-secondary"></i>
           <div class="w-100 position-relative">
-              <label for="cliente_nombre">{{ form.cliente_nombre.label }}</label>
+              <label for="cliente_nombre">{{ form.cliente_nombre.label }} <span class="text-danger">*</span></label>
               <div class="input-group">
-                  {{ form.cliente_nombre(class_='form-control', autocomplete='off', id='cliente_nombre') }}
+                  {{ form.cliente_nombre(class_='form-control', autocomplete='off', id='cliente_nombre', required=true) }}
                   <button class="btn btn-outline-success" type="button" id="btn-crear-cliente-rapido" title="Creación rápida de cliente"><i class="bi bi-plus"></i></button>
               </div>
               <div id="resultados-cliente" class="list-group position-absolute w-100" style="z-index: 1000;"></div>

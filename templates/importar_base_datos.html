@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Importar Base de Datos{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="bi bi-upload"></i> Importar Base de Datos
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5><i class="bi bi-exclamation-triangle"></i> ¡ADVERTENCIA!</h5>
+                        <p class="mb-0">
+                            Esta operación <strong>REEMPLAZARÁ TODOS LOS DATOS ACTUALES</strong> de la base de datos. 
+                            Asegúrate de haber hecho un respaldo antes de continuar.
+                        </p>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-4">
+                            <label for="archivos" class="form-label">
+                                <strong>Seleccionar archivos CSV:</strong>
+                            </label>
+                            <input type="file" class="form-control" id="archivos" name="archivos" 
+                                   multiple accept=".csv" required>
+                            <div class="form-text">
+                                Selecciona los archivos CSV que quieres importar. 
+                                Puedes seleccionar múltiples archivos a la vez.
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6>Archivos requeridos:</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    usuarios.csv
+                                    <span class="badge bg-primary rounded-pill">Obligatorio</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    clientes.csv
+                                    <span class="badge bg-primary rounded-pill">Obligatorio</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    tareas.csv
+                                    <span class="badge bg-primary rounded-pill">Obligatorio</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    eventos.csv
+                                    <span class="badge bg-primary rounded-pill">Obligatorio</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    respuestas_formulario.csv
+                                    <span class="badge bg-primary rounded-pill">Obligatorio</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirmar" required>
+                                <label class="form-check-label" for="confirmar">
+                                    <strong>Confirmo que he hecho un respaldo de la base de datos actual</strong>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('panel_respaldo') }}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-warning" id="btn-importar" disabled>
+                                <i class="bi bi-upload"></i> Importar Datos
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Información adicional -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Información sobre la importación</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Proceso de importación:</h6>
+                    <ol>
+                        <li>Se eliminan todos los datos actuales de la base de datos</li>
+                        <li>Se importan los datos de los archivos CSV en el orden correcto</li>
+                        <li>Se verifican las relaciones entre las tablas</li>
+                        <li>Se confirma la importación exitosa</li>
+                    </ol>
+                    
+                    <h6 class="mt-3">Formato de archivos:</h6>
+                    <p class="mb-0">
+                        Los archivos CSV deben tener la misma estructura que los archivos exportados. 
+                        La primera fila debe contener los nombres de las columnas.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmarCheckbox = document.getElementById('confirmar');
+    const btnImportar = document.getElementById('btn-importar');
+    
+    confirmarCheckbox.addEventListener('change', function() {
+        btnImportar.disabled = !this.checked;
+    });
+    
+    // Confirmación adicional antes de importar
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (!confirm('¿Estás seguro de que quieres importar los datos? Esto reemplazará TODOS los datos actuales.')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

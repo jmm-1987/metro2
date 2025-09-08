@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}Panel de Respaldo{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="bi bi-shield-check text-warning"></i> 
+                Panel de Respaldo - Solo Root
+            </h2>
+            
+            <!-- Estadísticas de la base de datos -->
+            <div class="row mb-4">
+                <div class="col-md-2">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h3>{{ stats.usuarios }}</h3>
+                            <p class="mb-0">Usuarios</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h3>{{ stats.clientes }}</h3>
+                            <p class="mb-0">Clientes</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h3>{{ stats.tareas }}</h3>
+                            <p class="mb-0">Tareas</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body text-center">
+                            <h3>{{ stats.eventos }}</h3>
+                            <p class="mb-0">Eventos</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body text-center">
+                            <h3>{{ stats.respuestas }}</h3>
+                            <p class="mb-0">Respuestas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones de respaldo -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-download"></i> Exportar Base de Datos
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Exporta toda la base de datos a archivos CSV comprimidos en un archivo ZIP.</p>
+                            <p class="text-muted small">
+                                <strong>Incluye:</strong> Usuarios, Clientes, Tareas, Eventos y Respuestas de formularios
+                            </p>
+                            <a href="{{ url_for('exportar_base_datos') }}" class="btn btn-success">
+                                <i class="bi bi-download"></i> Descargar Respaldo Completo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">
+                                <i class="bi bi-upload"></i> Importar Base de Datos
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Importa datos desde archivos CSV. <strong class="text-danger">¡CUIDADO!</strong> Esto reemplazará todos los datos actuales.</p>
+                            <p class="text-muted small">
+                                <strong>Requerido:</strong> Archivos CSV con los nombres correctos
+                            </p>
+                            <a href="{{ url_for('importar_base_datos') }}" class="btn btn-warning">
+                                <i class="bi bi-upload"></i> Importar desde CSV
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información importante -->
+            <div class="alert alert-warning mt-4">
+                <h5><i class="bi bi-exclamation-triangle"></i> Información Importante</h5>
+                <ul class="mb-0">
+                    <li><strong>Exportar:</strong> Descarga un archivo ZIP con todos los datos actuales</li>
+                    <li><strong>Importar:</strong> Reemplaza TODOS los datos existentes con los del archivo CSV</li>
+                    <li><strong>Respaldo:</strong> Siempre haz una copia de seguridad antes de importar</li>
+                    <li><strong>Formato:</strong> Los archivos deben tener los nombres: usuarios.csv, clientes.csv, tareas.csv, eventos.csv, respuestas_formulario.csv</li>
+                </ul>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver al Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

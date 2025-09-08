@@ -35,8 +35,17 @@
       <div class="d-flex align-items-center gap-3 mb-3">
           <i class="bi bi-person fs-3 text-secondary"></i>
           <div class="w-100 position-relative">
-              {{ form.cliente_nombre.label }}
-              {{ form.cliente_nombre(class_='form-control', disabled=true) }}
+              {% if modo=='editar' %}
+                <label for="cliente_nombre">{{ form.cliente_nombre.label }} <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    {{ form.cliente_nombre(class_='form-control', autocomplete='off', id='cliente_nombre', required=true) }}
+                    <button class="btn btn-outline-success" type="button" id="btn-crear-cliente-rapido" title="Creación rápida de cliente"><i class="bi bi-plus"></i></button>
+                </div>
+                <div id="resultados-cliente" class="list-group position-absolute w-100" style="z-index: 1000;"></div>
+              {% else %}
+                {{ form.cliente_nombre.label }}
+                {{ form.cliente_nombre(class_='form-control', disabled=true) }}
+              {% endif %}
           </div>
       </div>
       
@@ -148,5 +157,68 @@
       }
     });
   });
+
+  // JavaScript para búsqueda de clientes en modo edición
+  {% if modo=='editar' %}
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('cliente_nombre');
+    const resultsDiv = document.getElementById('resultados-cliente');
+    const clientIdInput = document.getElementById('cliente_id');
+
+    if (searchInput && resultsDiv && clientIdInput) {
+      let debounceTimer;
+      searchInput.addEventListener('keyup', function() {
+        clearTimeout(debounceTimer);
+        const query = searchInput.value;
+
+        if (query.length < 2) {
+          resultsDiv.innerHTML = '';
+          if (query.length === 0) {
+            clientIdInput.value = '';
+          }
+          return;
+        }
+
+        debounceTimer = setTimeout(() => {
+          fetch(`{{ url_for('buscar_clientes') }}?q=${query}`)
+            .then(response => response.json())
+            .then(data => {
+              resultsDiv.innerHTML = '';
+              if (data.length > 0) {
+                data.forEach(cliente => {
+                  const item = document.createElement('a');
+                  item.href = '#';
+                  item.classList.add('list-group-item', 'list-group-item-action');
+                  item.textContent = cliente.text;
+                  item.dataset.id = cliente.id;
+                  resultsDiv.appendChild(item);
+                });
+              } else {
+                const item = document.createElement('span');
+                item.classList.add('list-group-item');
+                item.textContent = 'No se encontraron clientes';
+                resultsDiv.appendChild(item);
+              }
+            });
+        }, 300);
+      });
+
+      resultsDiv.addEventListener('click', function(e) {
+        if (e.target && e.target.matches('a.list-group-item-action')) {
+          e.preventDefault();
+          searchInput.value = e.target.textContent;
+          clientIdInput.value = e.target.dataset.id;
+          resultsDiv.innerHTML = '';
+        }
+      });
+
+      document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target)) {
+          resultsDiv.innerHTML = '';
+        }
+      });
+    }
+  });
+  {% endif %}
 </script>
 {% endblock %} 
