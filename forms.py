@@ -70,8 +70,8 @@ class CrearClienteForm(FlaskForm):
 
 class CrearTareaForm(FlaskForm):
     usuario_id = SelectField('Usuario', coerce=int, choices=[], validators=[DataRequired()])
-    cliente_id = HiddenField('Cliente ID', validators=[DataRequired()])
-    cliente_nombre = StringField('Buscar Cliente', validators=[DataRequired()])
+    cliente_id = HiddenField('Cliente ID', validators=[Optional()])
+    cliente_nombre = StringField('Buscar Cliente', validators=[Optional()])
     fecha = DateField('Fecha', validators=[DataRequired()])
     # Generar opciones de hora cada 15 minutos entre 07:00 y 22:45
     hora_choices = [(f'{h:02d}:{m:02d}', f'{h:02d}:{m:02d}') for h in range(7,23) for m in (0,15,30,45)]
@@ -83,8 +83,8 @@ class CrearTareaForm(FlaskForm):
 
 class ResolverTareaForm(FlaskForm):
     usuario_id = SelectField('Usuario', coerce=int, choices=[], validators=[DataRequired()])
-    cliente_id = HiddenField('Cliente ID', validators=[DataRequired()])
-    cliente_nombre = StringField('Buscar Cliente', validators=[DataRequired()])
+    cliente_id = HiddenField('Cliente ID', validators=[Optional()])
+    cliente_nombre = StringField('Buscar Cliente', validators=[Optional()])
     fecha = DateField('Fecha', validators=[DataRequired()])
     comentario = TextAreaField('Comentario')
     resolucion = TextAreaField('Resolución')
