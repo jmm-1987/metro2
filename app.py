@@ -286,14 +286,8 @@ def crear_tarea():
             if cliente:
                 form.cliente_id.data = cliente.id
                 form.cliente_nombre.data = f"{cliente.nombre} ({cliente.telefono})"
-                print(f"DEBUG: Cliente cargado - ID: {cliente.id}, Nombre: {cliente.nombre}")
-            else:
-                print(f"DEBUG: Cliente no encontrado con ID: {cliente_id}")
-        else:
-            print("DEBUG: No se pasó cliente_id como parámetro")
     if form.validate_on_submit():
         # Validar que se haya seleccionado un cliente
-        print(f"DEBUG: Validando cliente_id: '{form.cliente_id.data}' (tipo: {type(form.cliente_id.data)})")
         if not form.cliente_id.data or form.cliente_id.data == '' or form.cliente_id.data == 'None':
             flash('Debe seleccionar un cliente para crear la tarea', 'error')
             return render_template('crear_tarea.html', form=form, current_user=current_user, usuarios=usuarios)
@@ -870,4 +864,7 @@ def panel_respaldo():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True) 
+    
+    # Usar el puerto de Render o 5000 por defecto
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False) 
