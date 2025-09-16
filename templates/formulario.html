@@ -267,8 +267,18 @@
             // Inicializar sin selección
             stars.forEach(function(s) { s.classList.remove('selected'); });
 
+            // Variable para controlar si ya se está enviando
+            let enviando = false;
+
             document.getElementById('satisfaction-form').addEventListener('submit', function(event) {
                 event.preventDefault();
+                
+                // Prevenir envíos múltiples
+                if (enviando) {
+                    console.log('Ya se está enviando la encuesta, ignorando envío duplicado');
+                    return;
+                }
+
                 const clienteId = document.getElementById('cliente_id').value;
                 const puntuacion1 = document.getElementById('puntuacion1').value;
                 const sugerencias = document.getElementById('sugerencias').value;
@@ -278,6 +288,13 @@
                     alert('Por favor, valora la atención recibida.');
                     return;
                 }
+
+                // Marcar como enviando y deshabilitar el botón
+                enviando = true;
+                const submitBtn = document.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Enviando...';
 
                 // Enviar los datos al servidor
                 fetch('/api/guardar_encuesta', {
@@ -300,8 +317,27 @@
                             document.getElementById('thank-you-message').style.display = 'block';
                         }
                     } else {
-                        alert('Error al guardar la encuesta: ' + data.error);
+                        // Manejar error de duplicación de forma especial
+                        if (data.error && data.error.includes('Ya se ha enviado una encuesta')) {
+                            alert('Ya has completado la encuesta hoy. ¡Gracias por tu participación!');
+                            document.getElementById('satisfaction-form').style.display = 'none';
+                            document.getElementById('thank-you-message').style.display = 'block';
+                        } else {
+                            alert('Error al guardar la encuesta: ' + data.error);
+                            // Rehabilitar el botón en caso de error
+                            enviando = false;
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = originalText;
+                        }
                     }
+                })
+                .catch(error => {
+                    console.error('Error al enviar encuesta:', error);
+                    alert('Error al conectar con el servidor. Por favor, inténtalo de nuevo.');
+                    // Rehabilitar el botón en caso de error
+                    enviando = false;
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
                 });
             });
         });

@@ -691,6 +691,16 @@ def guardar_encuesta():
     if not cliente:
         return jsonify({'success': False, 'error': 'Cliente no encontrado'}), 404
 
+    # Verificar si ya existe una respuesta para este cliente hoy
+    hoy = datetime.datetime.utcnow().date()
+    respuesta_existente = RespuestaFormulario.query.filter(
+        RespuestaFormulario.cliente_id == cliente_id,
+        db.func.date(RespuestaFormulario.fecha) == hoy
+    ).first()
+    
+    if respuesta_existente:
+        return jsonify({'success': False, 'error': 'Ya se ha enviado una encuesta para este cliente hoy'}), 409
+
     # Calcular puntuación media (si hubiera más de una)
     puntuacion_media = float(puntuacion1)
 
