@@ -87,17 +87,23 @@
 <!-- Script para convertir inputs a mayúsculas -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Función para convertir texto a mayúsculas
+    // Función para convertir texto a mayúsculas manteniendo la posición del cursor
     function convertirAMayusculas(elemento) {
         if (elemento.value) {
+            const posicionCursor = elemento.selectionStart;
+            const posicionFin = elemento.selectionEnd;
             elemento.value = elemento.value.toUpperCase();
+            elemento.setSelectionRange(posicionCursor, posicionFin);
         }
     }
     
-    // Función para convertir texto a mayúsculas en textareas
+    // Función para convertir texto a mayúsculas en textareas manteniendo la posición del cursor
     function convertirTextareaAMayusculas(elemento) {
         if (elemento.value) {
+            const posicionCursor = elemento.selectionStart;
+            const posicionFin = elemento.selectionEnd;
             elemento.value = elemento.value.toUpperCase();
+            elemento.setSelectionRange(posicionCursor, posicionFin);
         }
     }
     
