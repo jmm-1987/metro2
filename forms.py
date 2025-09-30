@@ -54,6 +54,7 @@ class CrearClienteForm(FlaskForm):
         ('montealto', 'Montealto'),
         ('nueva ciudad', 'Nueva Ciudad'),
         ('prado / ifeme', 'Prado / IFEME'),
+        ('pol el prado', 'Pol El Prado'),
         ('proserpina', 'Proserpina'),
         ('salesianos', 'Salesianos'),
         ('vivero', 'Vivero'),
