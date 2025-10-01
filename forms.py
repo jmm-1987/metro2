@@ -61,7 +61,8 @@ class CrearClienteForm(FlaskForm):
         ('san juan / santa isabel', 'San Juan / Santa Isabel'),
         ('plantonal', 'Plantonal'),
         ('san andres', 'San Andres')
-    ], option_widget=widgets.CheckboxInput(), widget=widgets.ListWidget(prefix_label=False))
+    ], option_widget=widgets.CheckboxInput(), widget=widgets.ListWidget(prefix_label=False), validate_choice=False)
+    inmueble = StringField('Inmueble', validators=[Optional(), Length(max=100)])
     precio_min = IntegerField('Precio mínimo dispuesto a pagar', validators=[Optional()])
     precio_max = IntegerField('Precio máximo dispuesto a pagar', validators=[Optional()])
     estado = SelectField('Estado', choices=[('en_curso', 'En curso'),('pendiente', 'Standby'), ('finalizado', 'Finalizado')], default='en_curso')
@@ -73,6 +74,7 @@ class CrearTareaForm(FlaskForm):
     usuario_id = SelectField('Usuario', coerce=int, choices=[], validators=[DataRequired()])
     cliente_id = HiddenField('Cliente ID', validators=[Optional()])
     cliente_nombre = StringField('Buscar Cliente', validators=[Optional()])
+    inmueble = StringField('Inmueble', validators=[Optional(), Length(max=100)])
     fecha = DateField('Fecha', validators=[DataRequired()])
     # Generar opciones de hora cada 15 minutos entre 07:00 y 22:45
     hora_choices = [(f'{h:02d}:{m:02d}', f'{h:02d}:{m:02d}') for h in range(7,23) for m in (0,15,30,45)]
@@ -86,6 +88,7 @@ class ResolverTareaForm(FlaskForm):
     usuario_id = SelectField('Usuario', coerce=int, choices=[], validators=[DataRequired()])
     cliente_id = HiddenField('Cliente ID', validators=[Optional()])
     cliente_nombre = StringField('Buscar Cliente', validators=[Optional()])
+    inmueble = StringField('Inmueble', validators=[Optional(), Length(max=100)])
     fecha = DateField('Fecha', validators=[DataRequired()])
     comentario = TextAreaField('Comentario')
     resolucion = TextAreaField('Resolución')

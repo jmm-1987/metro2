@@ -85,6 +85,13 @@
             </div>
             <hr class="decor-sep">
             <div class="row mb-3">
+              <div class="col-12">
+                <span class="icon"><i class="bi bi-building"></i></span>
+                <label for="inmueble">{{ form.inmueble.label.text }}</label>
+                {{ form.inmueble(class_='form-control', id='inmueble') }}
+              </div>
+            </div>
+            <div class="row mb-3">
               <div class="col-6">
                 {{ form.comercial_id.label }}
                 {{ form.comercial_id(class_='form-select') }}
@@ -113,6 +120,10 @@
                       {{ subfield() }} {{ subfield.label.text }}
                     </label>
                   {% endfor %}
+                  <label style="font-weight:normal;">
+                    <input type="checkbox" id="zona_otros_check"> Otros
+                  </label>
+                  <input type="text" id="zona_otros_input" class="form-control form-control-sm" placeholder="Escribe la zona..." style="display:none;">
                 </div>
               </div>
             </div>
@@ -186,4 +197,83 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const zonaOtrosCheck = document.getElementById('zona_otros_check');
+  const zonaOtrosInput = document.getElementById('zona_otros_input');
+  const form = document.querySelector('form');
+  
+  // Lista de zonas predefinidas (valores que están en los checkboxes)
+  const zonasPredefinidasValores = [
+    'abadias', 'abadias norte', 'calzada', 'bodegones / zona sur', 'centro',
+    'la corchera', 'maria auxiliadora', 'sindicales', 'montealto', 'nueva ciudad',
+    'prado / ifeme', 'pol el prado', 'proserpina', 'salesianos', 'vivero',
+    'san juan / santa isabel', 'plantonal', 'san andres'
+  ];
+  
+  // Esperar un poco para que Flask/WTForms cargue los valores
+  setTimeout(function() {
+    // Obtener todas las zonas seleccionadas actualmente
+    const zonasSeleccionadas = [];
+    const todosLosCheckboxes = document.querySelectorAll('input[name="zonas"]');
+    
+    console.log('Total checkboxes zonas:', todosLosCheckboxes.length);
+    
+    todosLosCheckboxes.forEach(function(checkbox) {
+      if (checkbox.checked && checkbox.id !== 'zona_otros_check') {
+        console.log('Zona seleccionada:', checkbox.value);
+        zonasSeleccionadas.push(checkbox.value);
+      }
+    });
+    
+    console.log('Zonas seleccionadas:', zonasSeleccionadas);
+    
+    // Filtrar zonas personalizadas (las que no están en la lista predefinida)
+    const zonasPersonalizadas = zonasSeleccionadas.filter(z => {
+      const esPersonalizada = !zonasPredefinidasValores.includes(z.toLowerCase());
+      if (esPersonalizada) {
+        console.log('Zona personalizada encontrada:', z);
+      }
+      return esPersonalizada;
+    });
+    
+    console.log('Zonas personalizadas:', zonasPersonalizadas);
+    
+    // Si hay zonas personalizadas, mostrarlas en el campo "Otros"
+    if (zonasPersonalizadas.length > 0) {
+      zonaOtrosCheck.checked = true;
+      zonaOtrosInput.value = zonasPersonalizadas.join(', ');
+      zonaOtrosInput.style.display = 'block';
+      console.log('Campo "Otros" activado con:', zonasPersonalizadas.join(', '));
+    }
+  }, 100);
+  
+  // Mostrar/ocultar el input cuando se marca/desmarca el checkbox
+  zonaOtrosCheck.addEventListener('change', function() {
+    if (this.checked) {
+      zonaOtrosInput.style.display = 'block';
+      zonaOtrosInput.focus();
+    } else {
+      zonaOtrosInput.style.display = 'none';
+      zonaOtrosInput.value = '';
+    }
+  });
+  
+  // Al enviar el formulario, añadir la zona personalizada a las zonas seleccionadas
+  form.addEventListener('submit', function(e) {
+    if (zonaOtrosCheck.checked && zonaOtrosInput.value.trim()) {
+      // Crear un checkbox oculto con el valor personalizado
+      const hiddenCheckbox = document.createElement('input');
+      hiddenCheckbox.type = 'checkbox';
+      hiddenCheckbox.name = 'zonas';
+      hiddenCheckbox.value = zonaOtrosInput.value.trim().toLowerCase();
+      hiddenCheckbox.checked = true;
+      hiddenCheckbox.style.display = 'none';
+      form.appendChild(hiddenCheckbox);
+    }
+  });
+});
+</script>
+
 {% endblock %} 

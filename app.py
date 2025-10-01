@@ -85,7 +85,7 @@ def buscar_clientes():
         ).all()
     else:
         clientes = []
-    return jsonify([{'id': c.id, 'text': f'{c.nombre} ({c.telefono})'} for c in clientes])
+    return jsonify([{'id': c.id, 'text': f'{c.nombre} ({c.telefono})', 'inmueble': c.inmueble or ''} for c in clientes])
 
 @app.route('/clientes')
 @login_required
@@ -150,6 +150,7 @@ def crear_cliente():
             tipo_cliente=form.tipo_cliente.data or None,
             interes=','.join(form.interes.data) if form.interes.data else None,
             zonas=','.join(form.zonas.data) if form.zonas.data else None,
+            inmueble=form.inmueble.data or None,
             precio_min=form.precio_min.data if form.precio_min.data else None,
             precio_max=form.precio_max.data if form.precio_max.data else None,
             estado=form.estado.data,
@@ -186,6 +187,7 @@ def editar_cliente(cliente_id):
         cliente.tipo_cliente = form.tipo_cliente.data or None
         cliente.interes = ','.join(form.interes.data) if form.interes.data else None
         cliente.zonas = ','.join(form.zonas.data) if form.zonas.data else None
+        cliente.inmueble = form.inmueble.data or None
         cliente.precio_min = form.precio_min.data if form.precio_min.data else None
         cliente.precio_max = form.precio_max.data if form.precio_max.data else None
         cliente.estado = form.estado.data
@@ -286,6 +288,7 @@ def crear_tarea():
             if cliente:
                 form.cliente_id.data = cliente.id
                 form.cliente_nombre.data = f"{cliente.nombre} ({cliente.telefono})"
+                form.inmueble.data = cliente.inmueble
     if form.validate_on_submit():
         # Validar que se haya seleccionado un cliente
         if not form.cliente_id.data or form.cliente_id.data == '' or form.cliente_id.data == 'None':
@@ -304,6 +307,11 @@ def crear_tarea():
             estado=form.estado.data
         )
         db.session.add(tarea)
+        # Actualizar el inmueble del cliente si se modificó
+        if form.inmueble.data:
+            cliente = Cliente.query.get(form.cliente_id.data)
+            if cliente:
+                cliente.inmueble = form.inmueble.data
         try:
             db.session.commit()
             # Notificación al usuario asignado
@@ -367,6 +375,7 @@ def editar_tarea(tarea_id):
             form.usuario_id.data = tarea.usuario_id
             form.cliente_id.data = tarea.cliente_id
             form.cliente_nombre.data = f"{tarea.cliente.nombre} ({tarea.cliente.telefono})" if tarea.cliente else ''
+            form.inmueble.data = tarea.cliente.inmueble if tarea.cliente else ''
             form.fecha.data = tarea.fecha
             form.hora.data = tarea.hora.strftime('%H:%M') if tarea.hora else None
             form.comentario.data = tarea.comentario
@@ -384,6 +393,9 @@ def editar_tarea(tarea_id):
                 tarea.hora = form.hora.data
             tarea.comentario = form.comentario.data
             tarea.cliente_id = form.cliente_id.data
+            # Actualizar el inmueble del cliente si se modificó
+            if form.inmueble.data and tarea.cliente:
+                tarea.cliente.inmueble = form.inmueble.data
             try:
                 db.session.commit()
                 # Crear un nuevo evento en Google Calendar tras editar
@@ -432,6 +444,7 @@ def editar_tarea(tarea_id):
             if tarea.cliente:
                 form.cliente_nombre.data = f"{tarea.cliente.nombre} ({tarea.cliente.telefono})"
                 form.cliente_id.data = tarea.cliente_id
+                form.inmueble.data = tarea.cliente.inmueble
                 form.estado.data = tarea.estado
         form.estado.render_kw = {'style': 'display:none;'}
         if form.validate_on_submit():
@@ -439,6 +452,9 @@ def editar_tarea(tarea_id):
             if estado_post:
                 tarea.estado = estado_post
                 tarea.resolucion = form.resolucion.data
+                # Actualizar el inmueble del cliente si se modificó
+                if form.inmueble.data and tarea.cliente:
+                    tarea.cliente.inmueble = form.inmueble.data
                 # Si se cancela la tarea y hay cliente asociado, desactivar y finalizar cliente
                 if estado_post == 'cancelado' and tarea.cliente:
                     tarea.cliente.estado = 'finalizado'
@@ -519,6 +535,7 @@ def api_events():
                 'cliente': tarea.cliente.nombre if tarea.cliente else '',
                 'cliente_id': tarea.cliente.id if tarea.cliente else None,
                 'telefono': tarea.cliente.telefono if tarea.cliente and tarea.cliente.telefono else '',
+                'inmueble': tarea.cliente.inmueble if tarea.cliente and tarea.cliente.inmueble else '',
                 'encuesta_enviada': tarea.cliente.encuesta_enviada if tarea.cliente else None,
                 'estado': 'Por hacer',
                 'isHeader': False
@@ -540,6 +557,7 @@ def api_events():
                     'cliente': tarea.cliente.nombre if tarea.cliente else '',
                     'cliente_id': tarea.cliente.id if tarea.cliente else None,
                     'telefono': tarea.cliente.telefono if tarea.cliente and tarea.cliente.telefono else '',
+                    'inmueble': tarea.cliente.inmueble if tarea.cliente and tarea.cliente.inmueble else '',
                     'encuesta_enviada': tarea.cliente.encuesta_enviada if tarea.cliente else None,
                     'estado': 'Ha comprado' if tarea.estado == 'ha_comprado' else (
                         'Ha alquilado' if tarea.estado == 'ha_alquilado' else (

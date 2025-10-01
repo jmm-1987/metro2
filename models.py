@@ -32,6 +32,7 @@ class Cliente(db.Model):
     tipo_cliente = db.Column(db.String(50), nullable=True)
     interes = db.Column(db.Text, nullable=True)
     zonas = db.Column(db.Text, nullable=True)
+    inmueble = db.Column(db.String(100), nullable=True)
     precio_min = db.Column(db.Integer, nullable=True)
     precio_max = db.Column(db.Integer, nullable=True)
     encuesta_enviada = db.Column(db.String(20), default="sin_enviar")
