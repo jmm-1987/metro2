@@ -147,7 +147,7 @@ function renderTabla(filtrados) {
         <td>${cliente.fecha_creacion}</td>
         <td>
           <div class="d-inline-flex align-items-center gap-1">
-            ${cliente.telefono ? `<a href="https://wa.me/${cliente.telefono}" title="Enviar WhatsApp" class="btn btn-outline-success btn-sm whatsapp-btn" data-telefono="${cliente.telefono}"><i class="bi bi-whatsapp"></i></a>` : ''}
+            ${cliente.telefono ? `<button type="button" onclick="abrirWhatsApp('${cliente.telefono}')" title="Enviar WhatsApp" class="btn btn-outline-success btn-sm whatsapp-btn"><i class="bi bi-whatsapp"></i></button>` : ''}
             ${(cliente.encuesta_enviada === "sin_enviar" || cliente.encuesta_enviada === "enviada")
               ? `<a href="#" class="btn btn-outline-info btn-sm encuesta-btn px-2 py-1" style="font-size:0.85em;" data-telefono="${cliente.telefono}" data-cliente-id="${cliente.id}" title="${cliente.encuesta_enviada === 'enviada' ? 'Volver a enviar encuesta' : 'Enviar encuesta'}">
                     <i class="bi bi-clipboard-check"></i>
@@ -204,28 +204,13 @@ document.addEventListener('click', function(e) {
     const telefono = btn.getAttribute('data-telefono');
     const clienteId = btn.getAttribute('data-cliente-id');
     
-    // Limpiar y formatear el número de teléfono
-    let telefonoLimpio = telefono.replace(/[^\d+]/g, ''); // Solo números y +
-    
-    // Si no empieza con +, agregar +34 (España)
-    if (!telefonoLimpio.startsWith('+')) {
-      // Si empieza con 6 y tiene 9 dígitos, es español
-      if (telefonoLimpio.startsWith('6') && telefonoLimpio.length === 9) {
-        telefonoLimpio = '+34' + telefonoLimpio;
-      } else if (telefonoLimpio.startsWith('34') && telefonoLimpio.length === 11) {
-        telefonoLimpio = '+' + telefonoLimpio;
-      } else if (telefonoLimpio.length === 9) {
-        telefonoLimpio = '+34' + telefonoLimpio;
-      }
-    }
-    
-    // Verificar que el número sea válido
-    if (!telefonoLimpio || telefonoLimpio.length < 10) {
-      alert('Número de teléfono inválido: ' + telefono);
+    if (!clienteId) {
+      alert('No se pudo identificar el cliente para enviar la encuesta.');
       return;
     }
     
-    const texto = encodeURIComponent('Hola. ' +
+    // Preparar el mensaje de la encuesta
+    const mensaje = 'Hola. ' +
 'Gracias por visitar el inmueble con Metro Cuadrado Mérida. ' +
 'Queremos brindarte la mejor atención posible y por eso nos encantaría saber como fue tu experiencia y como te sentiste durante la visita. ' +
 '' +
@@ -234,16 +219,10 @@ document.addEventListener('click', function(e) {
 '' +
 '¡Vuestra opinión nos ayuda a mejorar cada día! ' +
 '' +
-'Un saludo, el equipo de Metro Cuadrado Mérida.');
+'Un saludo, el equipo de Metro Cuadrado Mérida.';
     
-    const businessUrl = `whatsapp://send?phone=${telefonoLimpio}&text=${texto}`;
-    const personalUrl = `https://wa.me/${telefonoLimpio}?text=${texto}`;
-    
-    // Intentar abrir WhatsApp
-    window.open(businessUrl, '_blank');
-    setTimeout(() => {
-      window.open(personalUrl, '_blank');
-    }, 500);
+    // Usar la función global abrirWhatsApp (definida en base.html)
+    abrirWhatsApp(telefono, mensaje);
     
     // Esperar 5 segundos y luego preguntar si se marcó como enviada
     setTimeout(() => {

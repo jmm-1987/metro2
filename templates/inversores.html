@@ -176,11 +176,10 @@ document.addEventListener('click', function(e) {
   if (e.target.closest('.whatsapp-btn')) {
     e.preventDefault();
     const btn = e.target.closest('.whatsapp-btn');
-    let telefono = btn.getAttribute('data-telefono') || '';
-    telefono = telefono.replace(/\D/g, ''); // Solo dígitos
+    const telefono = btn.getAttribute('data-telefono') || '';
     const mensaje = document.getElementById('mensaje_whatsapp').value.trim();
-    const webUrl = `https://wa.me/${telefono}${mensaje ? `?text=${encodeURIComponent(mensaje)}` : ''}`;
-    window.open(webUrl, '_blank');
+    // Usar la función global abrirWhatsApp (definida en base.html)
+    abrirWhatsApp(telefono, mensaje || null);
   }
 });
 

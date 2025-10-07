@@ -55,6 +55,15 @@ def dashboard():
     usuarios = Usuario.query.filter_by(activo=True).all() if current_user.es_admin else []
     return render_template('dashboard.html', tareas_por_hacer=tareas_por_hacer, tareas_resueltas=tareas_resueltas, clientes_list=clientes_list, now=now, es_admin=current_user.es_admin, usuarios=usuarios)
 
+@app.route('/dashboard_movil')
+@login_required
+def dashboard_movil():
+    if current_user.es_admin:
+        usuarios = Usuario.query.filter_by(activo=True).all()
+    else:
+        usuarios = []
+    return render_template('dashboard_movil.html', es_admin=current_user.es_admin, usuarios=usuarios)
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -65,6 +74,17 @@ def login():
             return redirect(url_for('dashboard'))
         flash('Usuario o contraseña incorrectos')
     return render_template('login.html', form=form)
+
+@app.route('/login_movil', methods=['GET', 'POST'])
+def login_movil():
+    form = LoginForm()
+    if form.validate_on_submit():
+        usuario = Usuario.query.filter_by(nombre=form.nombre.data).first()
+        if usuario and check_password_hash(usuario.password, form.password.data):
+            login_user(usuario)
+            return redirect(url_for('dashboard_movil'))
+        flash('Usuario o contraseña incorrectos')
+    return render_template('login_movil.html', form=form)
 
 @app.route('/logout')
 @login_required
@@ -119,6 +139,11 @@ def clientes():
     usuarios_dict = {u.id: u.nombre for u in Usuario.query.filter_by(activo=True).all()}
     
     return render_template('clientes.html', clientes=clientes, usuarios_dict=usuarios_dict)
+
+@app.route('/clientes_movil')
+@login_required
+def clientes_movil():
+    return render_template('clientes_movil.html')
 
 @app.route('/usuarios')
 @login_required

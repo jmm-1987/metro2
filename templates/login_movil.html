@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Entrar (Móvil){% endblock %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-center" style="min-height:100dvh;">
+  <div class="card shadow" style="width:100%;max-width:380px;border-radius:12px;">
+    <div class="card-header text-center" style="background:#fff;">
+      <img src="{{ url_for('static', filename='logoraul.png') }}" alt="Logo" style="height:48px;"/>
+      <div class="mt-2 fw-semibold">Metro2 · Acceso móvil</div>
+    </div>
+    <div class="card-body">
+      <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+          <label class="form-label">{{ form.nombre.label.text }}</label>
+          {{ form.nombre(class_='form-control', placeholder='Usuario') }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.password.label.text }}</label>
+          {{ form.password(class_='form-control', placeholder='Contraseña') }}
+        </div>
+        <button type="submit" class="btn btn-success w-100">Entrar</button>
+      </form>
+    </div>
+  </div>
+{% if form.errors %}
+  <div class="alert alert-danger mt-3" style="max-width:380px;margin:0 auto;">
+    {% for field, errors in form.errors.items() %}
+      {% for err in errors %}
+        <div>{{ err }}</div>
+      {% endfor %}
+    {% endfor %}
+  </div>
+{% endif %}
+</div>
+{% endblock %}
+
+
+

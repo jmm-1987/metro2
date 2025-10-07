@@ -40,28 +40,8 @@
       return;
     }
     
-    // Limpiar y formatear el número de teléfono
-    let telefonoLimpio = telefono.replace(/[^\d+]/g, ''); // Solo números y +
-    
-    // Si no empieza con +, agregar +34 (España)
-    if (!telefonoLimpio.startsWith('+')) {
-      // Si empieza con 6 y tiene 9 dígitos, es español
-      if (telefonoLimpio.startsWith('6') && telefonoLimpio.length === 9) {
-        telefonoLimpio = '+34' + telefonoLimpio;
-      } else if (telefonoLimpio.startsWith('34') && telefonoLimpio.length === 11) {
-        telefonoLimpio = '+' + telefonoLimpio;
-      } else if (telefonoLimpio.length === 9) {
-        telefonoLimpio = '+34' + telefonoLimpio;
-      }
-    }
-    
-    // Verificar que el número sea válido
-    if (!telefonoLimpio || telefonoLimpio.length < 10) {
-      alert('Número de teléfono inválido: ' + telefono);
-      return;
-    }
-    
-    const texto = encodeURIComponent('Hola. ' +
+    // Preparar el mensaje de la encuesta
+    const mensaje = 'Hola. ' +
 'Gracias por visitar el inmueble con Metro Cuadrado Mérida. ' +
 'Queremos brindarte la mejor atención posible y por eso nos encantaría saber como fue tu experiencia y como te sentiste durante la visita. ' +
 '' +
@@ -70,16 +50,10 @@
 '' +
 '¡Vuestra opinión nos ayuda a mejorar cada día! ' +
 '' +
-'Un saludo, el equipo de Metro Cuadrado Mérida.');
+'Un saludo, el equipo de Metro Cuadrado Mérida.';
     
-    const businessUrl = `whatsapp://send?phone=${telefonoLimpio}&text=${texto}`;
-    const personalUrl = `https://wa.me/${telefonoLimpio}?text=${texto}`;
-    
-    // Intentar abrir WhatsApp
-    window.open(businessUrl, '_blank');
-    setTimeout(() => {
-      window.open(personalUrl, '_blank');
-    }, 500);
+    // Usar la función global abrirWhatsApp (definida en base.html)
+    abrirWhatsApp(telefono, mensaje);
     
     // Esperar 5 segundos y luego preguntar si se marcó como enviada
     setTimeout(() => {
@@ -294,7 +268,7 @@
           console.log('TAREA:', cliente, 'TEL:', telefono);
           if (telefono) {
             let telClean = telefono.replace(/[^\d+]/g, '');
-            whatsappBtn = `<a href='https://wa.me/${telClean}' target='_blank' title='WhatsApp' class='btn btn-outline-success btn-sm btn-whatsapp' onclick='event.stopPropagation();'><i class='bi bi-whatsapp'></i></a>`;
+            whatsappBtn = `<button type='button' title='WhatsApp' class='btn btn-outline-success btn-sm btn-whatsapp' onclick='event.stopPropagation(); abrirWhatsApp("${telefono}");'><i class='bi bi-whatsapp'></i></button>`;
             llamarBtn = `<a href='tel:${telClean}' title='Llamar' class='btn btn-outline-primary btn-sm btn-llamar' onclick='event.stopPropagation();'><i class='bi bi-telephone'></i></a>`;
           }
           let comercialCircle = `<span style='display:inline-block;width:18px;height:18px;border-radius:50%;background:${comercialColor};margin-right:6px;vertical-align:middle;'></span>`;
@@ -360,7 +334,7 @@
           
           if (telefono) {
             let telClean = telefono.replace(/[^\d]/g, '');
-            whatsappBtn = `<a href='https://wa.me/${telClean}' target='_blank' title='Enviar WhatsApp' class='btn btn-outline-success btn-sm whatsapp-btn' style='padding: 0.25rem 0.5rem;' onclick='event.stopPropagation(); event.preventDefault(); window.open(this.href, "_blank"); return false;'><i class='bi bi-whatsapp'></i></a>`;
+            whatsappBtn = `<button type='button' title='Enviar WhatsApp' class='btn btn-outline-success btn-sm whatsapp-btn' style='padding: 0.25rem 0.5rem;' onclick='event.stopPropagation(); abrirWhatsApp("${telefono}");'><i class='bi bi-whatsapp'></i></button>`;
             
             // Botón de encuesta - solo mostrar si no está respondida
             if (encuestaEnviada !== "respondida") {

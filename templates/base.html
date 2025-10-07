@@ -165,6 +165,65 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Función global para abrir WhatsApp con preferencia por WhatsApp Business
+function abrirWhatsApp(numero, mensaje) {
+  if (!numero) return;
+  
+  // Limpiar el número y asegurarse de que tenga código de país
+  let cleanNum = numero.toString().replace(/\D/g, '');
+  if (cleanNum.length === 9 && !numero.startsWith('+')) {
+    // Asumir España si el número tiene 9 dígitos sin código de país
+    cleanNum = '34' + cleanNum;
+  }
+  
+  // Preparar el mensaje si existe
+  const mensajeEncoded = mensaje ? encodeURIComponent(mensaje) : '';
+  const mensajeParam = mensaje ? `&text=${mensajeEncoded}` : '';
+  
+  // URLs para diferentes clientes de WhatsApp
+  const whatsappBusinessUrl = `whatsapp://send?phone=${cleanNum}${mensajeParam}`;
+  const whatsappUrl = `whatsapp://send?phone=${cleanNum}${mensajeParam}`;
+  const waWebUrl = `https://wa.me/${cleanNum}${mensaje ? '?text=' + mensajeEncoded : ''}`;
+  
+  // Estrategia: Intentar abrir la app primero, si falla usar wa.me
+  let intentoFallido = true;
+  
+  // Detectar si estamos en móvil
+  const esMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  if (esMobile) {
+    // En móvil, usar deep links
+    const startTime = Date.now();
+    const timeoutDuracion = 1500;
+    
+    // Intentar abrir WhatsApp Business primero
+    window.location.href = whatsappBusinessUrl;
+    
+    // Si no funciona después de un tiempo, intentar WhatsApp normal
+    const timeout = setTimeout(function() {
+      window.location.href = whatsappUrl;
+      
+      // Si tampoco funciona, abrir wa.me como último recurso
+      setTimeout(function() {
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 3500) {
+          window.open(waWebUrl, '_blank');
+        }
+      }, 1000);
+    }, timeoutDuracion);
+    
+    // Limpiar timeout si la página pierde visibilidad (indicando que la app se abrió)
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        clearTimeout(timeout);
+      }
+    }, { once: true });
+  } else {
+    // En escritorio, usar wa.me directamente
+    window.open(waWebUrl, '_blank');
+  }
+}
 </script>
 </body>
 </html> 

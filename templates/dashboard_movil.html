@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+{% block title %}Inicio (Móvil){% endblock %}
+{% block content %}
+<div class="card" style="border-radius:0;min-height:calc(100dvh - 64px);margin-top:64px;">
+  <div class="card-header d-flex align-items-center justify-content-between" style="background:#fff;gap:6px;">
+    <div class="btn-group" role="group" aria-label="Navegación">
+      <button class="btn btn-outline-secondary btn-sm" id="btn-dia-anterior"><i class="bi bi-chevron-left"></i></button>
+      <button class="btn btn-outline-primary btn-sm" id="btn-hoy">Hoy</button>
+      <button class="btn btn-outline-secondary btn-sm" id="btn-dia-siguiente"><i class="bi bi-chevron-right"></i></button>
+    </div>
+    <div class="flex-grow-1 text-center" id="lbl-fecha" style="font-weight:600;"></div>
+    <a href="{{ url_for('crear_tarea') }}" class="btn btn-success btn-sm"><i class="bi bi-plus"></i></a>
+  </div>
+
+  <div class="p-2" id="movil-filtros">
+    {% if es_admin %}
+    <label class="form-label mb-1">Comercial</label>
+    <select id="movil-filtro-comercial" class="form-select form-select-sm mb-2">
+      <option value="">Todos</option>
+      {% for usuario in usuarios %}
+      <option value="{{ usuario.id }}">{{ usuario.nombre }}</option>
+      {% endfor %}
+    </select>
+    {% endif %}
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" id="movil-ver-resueltas">
+      <label class="form-check-label" for="movil-ver-resueltas">Ver resueltas</label>
+    </div>
+  </div>
+
+  <div class="p-2" id="movil-lista-tareas" style="display:flex;flex-direction:column;gap:8px;"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const cont = document.getElementById('movil-lista-tareas');
+  const chkResueltas = document.getElementById('movil-ver-resueltas');
+  const filtroComercial = document.getElementById('movil-filtro-comercial');
+
+  let currentDate = new Date();
+  function toISO(d) {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  function setLabel() {
+    try {
+      const opts = { weekday:'long', day:'2-digit', month:'long' };
+      document.getElementById('lbl-fecha').textContent = currentDate.toLocaleDateString('es-ES', opts);
+    } catch(_) { document.getElementById('lbl-fecha').textContent = toISO(currentDate); }
+  }
+
+  function fetchTareas() {
+    const start = toISO(currentDate) + 'T00:00:00Z';
+    const endDate = new Date(currentDate.getTime());
+    endDate.setDate(endDate.getDate() + 1);
+    const end = toISO(endDate) + 'T00:00:00Z';
+    let url = `/api/events?start=${start}&end=${end}`;
+    if (chkResueltas.checked) url += '&mostrar_resueltas=1';
+    {% if es_admin %}
+    if (filtroComercial && filtroComercial.value) url += `&comercial_id=${filtroComercial.value}`;
+    {% endif %}
+    fetch(url)
+      .then(r=>r.json())
+      .then(render)
+      .catch(()=>{ cont.innerHTML = '<div class="alert alert-danger">Error cargando tareas</div>'; });
+  }
+
+  function fmtHora(dateStr) {
+    try {
+      const d = new Date(dateStr);
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mm = String(d.getMinutes()).padStart(2,'0');
+      return (hh+mm) === '0000' ? '' : `${hh}:${mm}`;
+    } catch(_) { return ''; }
+  }
+
+  function render(events) {
+    cont.innerHTML = '';
+    const tareas = events.filter(e => !e.extendedProps || !e.extendedProps.isHeader);
+    if (!tareas.length) {
+      cont.innerHTML = '<div class="text-muted text-center py-3">Sin tareas para hoy</div>';
+      return;
+    }
+    tareas.sort((a,b)=> (a.start||'').localeCompare(b.start||''));
+    tareas.forEach(ev => {
+      const p = ev.extendedProps || {};
+      const hora = fmtHora(ev.start);
+      const color = ev.backgroundColor || '#6c757d';
+      const comercial = p.comercial || '';
+      const cliente = p.cliente || '';
+      const tel = p.telefono || '';
+      const inmueble = (p.inmueble || '').trim();
+      const comentario = ev.title || '';
+      const estado = (p.estado || '').toString();
+
+      const telClean = (tel||'').replace(/[^\d+]/g,'');
+      function buildWhatsAppButton(number){
+        if(!number) return '';
+        // Limpiar número: si no empieza con +, agregar código de país
+        let cleanNum = number.replace(/\D/g, '');
+        if (!number.startsWith('+')) {
+          // Si el número no tiene código de país, asumir España (+34)
+          if (cleanNum.length === 9) cleanNum = '34' + cleanNum;
+        }
+        // Intentar WhatsApp Business primero, luego WhatsApp normal, finalmente wa.me
+        return `<button type="button" class="btn btn-outline-success btn-sm" onclick="event.stopPropagation(); abrirWhatsApp('${cleanNum}'); return false;"><i class='bi bi-whatsapp'></i></button>`;
+      }
+      const whatsappBtn = buildWhatsAppButton(telClean);
+      const callBtn = telClean ? `<a href="tel:${telClean}" class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation();"><i class='bi bi-telephone'></i></a>` : '';
+
+      const li = document.createElement('div');
+      li.className = 'list-group-item list-group-item-action';
+      li.style.cssText = 'border:1px solid #dee2e6;border-radius:10px;padding:10px;cursor:pointer;';
+      li.onclick = function(e) {
+        // Solo navegar si no se hizo clic en un botón
+        if (!e.target.closest('button') && !e.target.closest('a')) {
+          window.location.href = ev.url || '#';
+        }
+      };
+      li.innerHTML = `
+        <div class="d-flex align-items-center mb-1" style="gap:8px;">
+          <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${color}"></span>
+          <strong>${hora ? hora + ' · ' : ''}${comercial}</strong>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cliente}</div>
+          <div style="font-size:0.9rem;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${inmueble || ''}</div>
+          <div style="font-size:0.95rem;margin-top:4px;color:#333;">${comentario}</div>
+        </div>
+        <div class="d-flex align-items-center" style="gap:6px;margin-top:8px;">
+          <a href="${ev.url || '#'}" class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation();" title="Resolver"><i class="bi bi-pencil-square"></i></a>
+          ${callBtn}
+          ${whatsappBtn}
+          ${telClean ? `<button type=\"button\" class=\"btn btn-outline-warning btn-sm\" onclick=\"event.stopPropagation(); enviarEncuesta('${tel}', '${p.cliente_id||''}'); return false;\" title=\"Enviar encuesta\"><i class='bi bi-clipboard-check'></i></button>` : ''}
+          ${estado ? `<span class=\"badge bg-secondary\">${estado}</span>` : ''}
+        </div>
+      `;
+      cont.appendChild(li);
+    });
+  }
+
+  chkResueltas.addEventListener('change', fetchTareas);
+  document.getElementById('btn-dia-anterior').addEventListener('click', function(){ currentDate.setDate(currentDate.getDate()-1); setLabel(); fetchTareas(); });
+  document.getElementById('btn-dia-siguiente').addEventListener('click', function(){ currentDate.setDate(currentDate.getDate()+1); setLabel(); fetchTareas(); });
+  document.getElementById('btn-hoy').addEventListener('click', function(){ currentDate = new Date(); setLabel(); fetchTareas(); });
+  {% if es_admin %}
+  if (filtroComercial) filtroComercial.addEventListener('change', fetchTareas);
+  {% endif %}
+
+  setLabel();
+  fetchTareas();
+});
+
+// Función para enviar encuesta (usa la función global abrirWhatsApp del base.html)
+function enviarEncuesta(telefono, clienteId) {
+  console.log('Función enviarEncuesta llamada con:', telefono, clienteId);
+  
+  if (!clienteId) {
+    alert('No se pudo identificar el cliente para enviar la encuesta.');
+    return;
+  }
+  
+  // Preparar el mensaje de la encuesta (EXACTAMENTE igual que dashboard.html)
+  const mensaje = 'Hola. ' +
+'Gracias por visitar el inmueble con Metro Cuadrado Mérida. ' +
+'Queremos brindarte la mejor atención posible y por eso nos encantaría saber como fue tu experiencia y como te sentiste durante la visita. ' +
+'' +
+'Solo tienes que contestar a una pregunta muy breve: ' +
+'👉 https://metro2-9bxg.onrender.com/formulario?cliente_id=' + clienteId + ' ' +
+'' +
+'¡Vuestra opinión nos ayuda a mejorar cada día! ' +
+'' +
+'Un saludo, el equipo de Metro Cuadrado Mérida.';
+  
+  // Usar la función global abrirWhatsApp (definida en base.html)
+  abrirWhatsApp(telefono, mensaje);
+  
+  // Esperar 5 segundos y luego preguntar si se marcó como enviada
+  setTimeout(() => {
+    console.log('Mostrando confirmación de envío de encuesta...');
+    
+    // Crear un modal personalizado en lugar de usar confirm()
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    `;
+    
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    `;
+    
+    modalContent.innerHTML = `
+      <h4 style="margin-bottom: 20px; color: #333;">Confirmar envío de encuesta</h4>
+      <p style="margin-bottom: 25px; color: #666; line-height: 1.5;">
+        ¿Quieres marcar la encuesta como enviada?<br><br>
+        <strong>Si la encuesta se envió correctamente</strong>, haz clic en "Sí".<br>
+        <strong>Si hubo algún problema</strong>, haz clic en "No".
+      </p>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button id="btn-confirmar-si" style="
+          background: #28a745;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 5px;
+          cursor: pointer;
+          font-weight: bold;
+        ">Sí, marcar como enviada</button>
+        <button id="btn-confirmar-no" style="
+          background: #dc3545;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 5px;
+          cursor: pointer;
+          font-weight: bold;
+        ">No, hubo problemas</button>
+      </div>
+    `;
+    
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    
+    // Event listeners para los botones
+    document.getElementById('btn-confirmar-si').addEventListener('click', function() {
+      console.log('Usuario confirmó envío de encuesta');
+      document.body.removeChild(modal);
+      
+      console.log('Marcando encuesta como enviada...');
+      // Guardar en la base de datos
+      fetch(`/api/marcar_encuesta_enviada/${clienteId}`, {
+        method: 'POST', 
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        console.log('Respuesta del servidor:', response);
+        return response.json();
+      })
+      .then(data => {
+        console.log('Datos de respuesta:', data);
+        if (!data.success) {
+          alert('No se pudo actualizar el estado de la encuesta en la base de datos: ' + (data.error || 'Error desconocido'));
+        } else {
+          console.log('Encuesta marcada como enviada correctamente');
+          // Refrescar la lista de tareas para mostrar los cambios
+          fetchTareas();
+        }
+      })
+      .catch(error => {
+        console.error('Error al marcar encuesta como enviada:', error);
+        alert('Error al conectar con el servidor: ' + error.message);
+      });
+    });
+    
+    document.getElementById('btn-confirmar-no').addEventListener('click', function() {
+      console.log('Usuario canceló el marcado de encuesta como enviada');
+      document.body.removeChild(modal);
+    });
+    
+  }, 5000); // 5 segundos de espera
+}
+</script>
+
+<style>
+/* Asegurar que el menú superior y sus desplegables queden por encima del contenido móvil */
+.navbar, .dropdown-menu { z-index: 1100 !important; }
+.dropdown-menu { position: absolute; }
+/* Evitar que el contenido móvil tape el menú */
+.card { z-index: 0; }
+@media (min-width: 768px) {
+  /* Forzar estilo móvil si se abre en escritorio */
+  .card { max-width: 520px; margin: 0 auto; }
+}
+</style>
+{% endblock %}
+
+

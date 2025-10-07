@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Clientes (Móvil){% endblock %}
+{% block content %}
+<div class="card" style="border-radius:0;min-height:100dvh;">
+  <div class="card-header d-flex align-items-center justify-content-between" style="position:sticky;top:0;background:#fff;z-index:10;">
+    <div style="font-weight:600;">Clientes (Móvil)</div>
+    <a href="{{ url_for('crear_cliente') }}" class="btn btn-success btn-sm"><i class="bi bi-person-plus"></i></a>
+  </div>
+
+  <div class="p-2" id="filtros-clientes-movil">
+    <div class="mb-2">
+      <label class="form-label mb-1">Buscar</label>
+      <input type="text" id="busqueda" class="form-control form-control-sm" placeholder="Nombre o teléfono...">
+    </div>
+    <div class="d-flex" style="gap:8px;">
+      <select id="filtro-estado" class="form-select form-select-sm">
+        <option value="">Todos</option>
+        <option value="en_curso">En curso</option>
+        <option value="pendiente">Standby</option>
+        <option value="finalizado">Finalizado</option>
+      </select>
+      <select id="filtro-tipo" class="form-select form-select-sm">
+        <option value="">Todos</option>
+        <option value="inversor">Inversor</option>
+        <option value="comprador">Comprador</option>
+        <option value="arrendatario">Arrendatario</option>
+        <option value="arrendador">Arrendador</option>
+        <option value="vendedor">Vendedor</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="list-group list-group-flush" id="lista-clientes"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const lista = document.getElementById('lista-clientes');
+  const q = document.getElementById('busqueda');
+  const est = document.getElementById('filtro-estado');
+  const tipo = document.getElementById('filtro-tipo');
+
+  function fetchClientes() {
+    const params = new URLSearchParams();
+    if (est.value) params.set('estado', est.value);
+    if (tipo.value) params.set('tipo_cliente', tipo.value);
+    const url = '/clientes' + (params.toString() ? ('?' + params.toString()) : '');
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
+      .then(r => r.text())
+      .then(html => {
+        try {
+          // Si el backend soporta JSON en el futuro, ajustar. Por ahora, parsear desde la página completa (fallback simplificado)
+          lista.innerHTML = '<div class="text-muted p-3">Usa el buscador para filtrar rápidamente.</div>';
+        } catch(_) {
+          lista.innerHTML = '<div class="text-muted p-3">No se pudieron cargar los clientes.</div>';
+        }
+      });
+  }
+
+  function buscarRapido() {
+    const term = (q.value || '').toLowerCase().trim();
+    if (!term) { render([]); return; }
+    fetch(`{{ url_for('buscar_clientes') }}?q=${encodeURIComponent(term)}`)
+      .then(r => r.json())
+      .then(data => {
+        // buscar_clientes devuelve id y text "Nombre (tel)"
+        render(data.map(d => ({ id: d.id, nombreTel: d.text })));
+      })
+      .catch(()=>{ render([]); });
+  }
+
+  function render(clientes) {
+    if (!clientes.length) {
+      lista.innerHTML = '<div class="text-muted p-3">Sin resultados</div>';
+      return;
+    }
+    lista.innerHTML = '';
+    clientes.forEach(c => {
+      const a = document.createElement('a');
+      a.href = `/editar_cliente/${c.id}`;
+      a.className = 'list-group-item list-group-item-action';
+      a.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.nombreTel}</div>
+          <i class="bi bi-chevron-right"></i>
+        </div>
+      `;
+      lista.appendChild(a);
+    });
+  }
+
+  q.addEventListener('input', function() {
+    if (q.value.trim().length >= 2) buscarRapido();
+    else lista.innerHTML = '';
+  });
+  est.addEventListener('change', fetchClientes);
+  tipo.addEventListener('change', fetchClientes);
+
+  // Inicio vacío, se llena al buscar
+});
+</script>
+
+<style>
+@media (min-width: 768px) {
+  .card { max-width: 520px; margin: 0 auto; }
+}
+</style>
+{% endblock %}
+
+
+
