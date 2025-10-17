@@ -17,6 +17,7 @@ from enviar_email import enviar_email
 import os
 from enviar_telegram import enviar_telegram
 from backup_manager import export_database_to_csv, import_database_from_csv, create_backup_zip
+import re
 
 # Cargar el token una vez al arrancar la app
 TOKEN_TELEGRAM = os.environ.get('TELEGRAM_BOT_TOKEN')
@@ -38,9 +39,27 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
 
+def is_mobile_device(user_agent):
+    """Detecta si el dispositivo es móvil basado en el User-Agent"""
+    mobile_patterns = [
+        r'Mobile', r'Android', r'iPhone', r'iPad', r'iPod', 
+        r'BlackBerry', r'Windows Phone', r'Opera Mini', r'IEMobile'
+    ]
+    user_agent_lower = user_agent.lower()
+    return any(re.search(pattern, user_agent_lower, re.IGNORECASE) for pattern in mobile_patterns)
+
 @app.route('/')
 @login_required
 def dashboard():
+    # Detectar si es móvil y redirigir automáticamente
+    if is_mobile_device(request.headers.get('User-Agent', '')):
+        return redirect(url_for('dashboard_movil'))
+    else:
+        return dashboard_desktop()
+
+@app.route('/dashboard')
+@login_required
+def dashboard_desktop():
     if current_user.es_admin:
         tareas = Tarea.query.options(joinedload(Tarea.usuario), joinedload(Tarea.cliente)).order_by(Tarea.fecha.asc(), Tarea.hora.asc()).all()
         clientes_list = Cliente.query.filter_by(estado='en_curso').order_by(Cliente.nombre.asc()).limit(15).all()
@@ -71,20 +90,23 @@ def login():
         usuario = Usuario.query.filter_by(nombre=form.nombre.data).first()
         if usuario and check_password_hash(usuario.password, form.password.data):
             login_user(usuario)
-            return redirect(url_for('dashboard'))
+            # Detectar si es móvil y redirigir apropiadamente
+            if is_mobile_device(request.headers.get('User-Agent', '')):
+                return redirect(url_for('dashboard_movil'))
+            else:
+                return redirect(url_for('dashboard'))
         flash('Usuario o contraseña incorrectos')
-    return render_template('login.html', form=form)
+    
+    # Para GET, mostrar el template apropiado según el dispositivo
+    if is_mobile_device(request.headers.get('User-Agent', '')):
+        return render_template('login_movil.html', form=form)
+    else:
+        return render_template('login.html', form=form)
 
+# Mantener login_movil por compatibilidad, pero redirigir al login principal
 @app.route('/login_movil', methods=['GET', 'POST'])
 def login_movil():
-    form = LoginForm()
-    if form.validate_on_submit():
-        usuario = Usuario.query.filter_by(nombre=form.nombre.data).first()
-        if usuario and check_password_hash(usuario.password, form.password.data):
-            login_user(usuario)
-            return redirect(url_for('dashboard_movil'))
-        flash('Usuario o contraseña incorrectos')
-    return render_template('login_movil.html', form=form)
+    return redirect(url_for('login'))
 
 @app.route('/logout')
 @login_required
@@ -110,6 +132,15 @@ def buscar_clientes():
 @app.route('/clientes')
 @login_required
 def clientes():
+    # Detectar si es móvil y redirigir automáticamente
+    if is_mobile_device(request.headers.get('User-Agent', '')):
+        return redirect(url_for('clientes_movil'))
+    else:
+        return clientes_desktop()
+
+@app.route('/clientes_desktop')
+@login_required
+def clientes_desktop():
     estado = request.args.get('estado')
     tipo_cliente = request.args.get('tipo_cliente')
     interes = request.args.get('interes')

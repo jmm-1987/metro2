@@ -166,6 +166,42 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Función global para detectar si es dispositivo móvil
+function esDispositivoMovil() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+// Función para detectar si el usuario está en modo móvil (basado en URL actual o detección)
+function estaEnModoMovil() {
+  return window.location.pathname.includes('_movil') || esDispositivoMovil();
+}
+
+// Función para mantener navegación móvil una vez detectado
+function mantenerNavegacionMovil() {
+  if (estaEnModoMovil()) {
+    // Si estamos en móvil, asegurar que los enlaces principales vayan a la versión móvil
+    const enlacesTareas = document.querySelectorAll('.menu-tareas');
+    const enlacesClientes = document.querySelectorAll('.menu-clientes');
+    
+    enlacesTareas.forEach(link => {
+      if (link.href.includes('/dashboard') || link.href === window.location.origin + '/') {
+        link.href = '/dashboard_movil';
+      }
+    });
+    
+    enlacesClientes.forEach(link => {
+      if (link.href.includes('/clientes')) {
+        link.href = '/clientes_movil';
+      }
+    });
+  }
+}
+
+// Ejecutar al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+  mantenerNavegacionMovil();
+});
+
 // Función global para abrir WhatsApp con preferencia por WhatsApp Business
 function abrirWhatsApp(numero, mensaje) {
   if (!numero) return;
