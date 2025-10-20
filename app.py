@@ -41,18 +41,29 @@ def load_user(user_id):
 
 def is_mobile_device(user_agent):
     """Detecta si el dispositivo es móvil basado en el User-Agent"""
+    if not user_agent:
+        return False
+    
     mobile_patterns = [
-        r'Mobile', r'Android', r'iPhone', r'iPad', r'iPod', 
+        r'Android', r'iPhone', r'iPad', r'iPod', 
         r'BlackBerry', r'Windows Phone', r'Opera Mini', r'IEMobile'
     ]
     user_agent_lower = user_agent.lower()
+    
+    # Solo considerar móvil si es claramente un dispositivo móvil
+    # Excluir "Mobile" genérico para evitar falsos positivos
     return any(re.search(pattern, user_agent_lower, re.IGNORECASE) for pattern in mobile_patterns)
 
 @app.route('/')
 @login_required
 def dashboard():
     # Detectar si es móvil y redirigir automáticamente
-    if is_mobile_device(request.headers.get('User-Agent', '')):
+    user_agent = request.headers.get('User-Agent', '')
+    is_mobile = is_mobile_device(user_agent)
+    print(f"User-Agent: {user_agent}")
+    print(f"Is mobile: {is_mobile}")
+    
+    if is_mobile:
         return redirect(url_for('dashboard_movil'))
     else:
         return dashboard_desktop()
@@ -60,6 +71,9 @@ def dashboard():
 @app.route('/dashboard')
 @login_required
 def dashboard_desktop():
+    print(f"Dashboard desktop - Usuario: {current_user.nombre}")
+    print(f"Es admin: {current_user.es_admin}")
+    
     if current_user.es_admin:
         tareas = Tarea.query.options(joinedload(Tarea.usuario), joinedload(Tarea.cliente)).order_by(Tarea.fecha.asc(), Tarea.hora.asc()).all()
         clientes_list = Cliente.query.filter_by(estado='en_curso').order_by(Cliente.nombre.asc()).limit(15).all()
@@ -70,8 +84,15 @@ def dashboard_desktop():
     tareas_por_hacer = [t for t in tareas if t.estado == 'por_hacer']
     tareas_resueltas = [t for t in tareas if t.estado in ['pendiente', 'cancelado', 'reagendada']]
 
+    print(f"Total tareas: {len(tareas)}")
+    print(f"Tareas por hacer: {len(tareas_por_hacer)}")
+    print(f"Tareas resueltas: {len(tareas_resueltas)}")
+
     now = datetime.datetime.now()
     usuarios = Usuario.query.filter_by(activo=True).all() if current_user.es_admin else []
+    
+    print(f"Dashboard desktop - Sin parámetros de vista")
+    
     return render_template('dashboard.html', tareas_por_hacer=tareas_por_hacer, tareas_resueltas=tareas_resueltas, clientes_list=clientes_list, now=now, es_admin=current_user.es_admin, usuarios=usuarios)
 
 @app.route('/dashboard_movil')
@@ -411,6 +432,8 @@ def crear_tarea():
                 flash('La tarea se creó, pero no se pudo añadir a Google Calendar.', 'warning')
                 print(f"Error al crear evento en Google Calendar: {e}")
             flash('Tarea creada correctamente')
+            # Redirigir al dashboard (la vista se restaurará desde localStorage)
+            print(f"Redirigiendo al dashboard después de crear tarea")
             return redirect(url_for('dashboard'))
         except Exception as e:
             db.session.rollback()
@@ -423,6 +446,9 @@ def crear_tarea():
 def editar_tarea(tarea_id):
     tarea = Tarea.query.get_or_404(tarea_id)
     modo = request.args.get('modo') or request.form.get('modo')
+    # Obtener parámetros de vista anterior
+    vista_anterior = request.args.get('vista_anterior', 'listDay')
+    fecha_anterior = request.args.get('fecha_anterior', '')
     if modo == 'editar':
         # Modo edición: usar CrearTareaForm
         form = CrearTareaForm(obj=tarea)
@@ -485,6 +511,8 @@ def editar_tarea(tarea_id):
                     print(f"Error al actualizar/crear evento en Google Calendar: {e}")
                     flash('La tarea se guardó, pero no se pudo actualizar/crear el evento en Google Calendar.', 'warning')
                 flash('Tarea actualizada correctamente.')
+                # Redirigir al dashboard (la vista se restaurará desde localStorage)
+                print(f"Redirigiendo al dashboard después de editar tarea")
                 return redirect(url_for('dashboard'))
             except Exception as e:
                 db.session.rollback()
@@ -531,7 +559,9 @@ def editar_tarea(tarea_id):
                     if tarea.estado == 'reagendada' and request.args.get('reagendar') == '1':
                         return redirect(url_for('crear_tarea', cliente_id=tarea.cliente_id, usuario_id=tarea.usuario_id, reagendada=1))
                     flash('Resolución de la tarea actualizada correctamente.')
-                    return redirect(url_for('dashboard'))
+                # Redirigir al dashboard (la vista se restaurará desde localStorage)
+                print(f"Redirigiendo al dashboard después de resolver tarea")
+                return redirect(url_for('dashboard'))
             except Exception as e:
                 db.session.rollback()
                 flash(f'Error al actualizar la tarea: {e}')
@@ -545,6 +575,10 @@ def api_events():
     end_str = request.args.get('end')
     mostrar_resueltas = request.args.get('mostrar_resueltas') == '1'
     comercial_id = request.args.get('comercial_id', type=int)
+    
+    # Obtener parámetros de vista actual para incluir en los enlaces
+    vista_actual = request.args.get('vista_actual', 'listDay')
+    fecha_actual = request.args.get('fecha_actual', '')
 
     start_date = datetime.datetime.fromisoformat(start_str.split('T')[0]).date()
     end_date = datetime.datetime.fromisoformat(end_str.split('T')[0]).date()
@@ -583,7 +617,7 @@ def api_events():
         events.append({
             'title': tarea.comentario or 'Sin descripción',
             'start': event_start.isoformat(),
-            'url': url_for('editar_tarea', tarea_id=tarea.id),
+            'url': url_for('editar_tarea', tarea_id=tarea.id, vista_anterior=vista_actual, fecha_anterior=fecha_actual),
             'backgroundColor': tarea.usuario.color if tarea.usuario else '#6c757d',
             'borderColor': tarea.usuario.color if tarea.usuario else '#6c757d',
             'extendedProps': {
@@ -605,7 +639,7 @@ def api_events():
             events.append({
                 'title': tarea.comentario or 'Sin descripción',
                 'start': event_start.isoformat(),
-                'url': url_for('editar_tarea', tarea_id=tarea.id),
+                'url': url_for('editar_tarea', tarea_id=tarea.id, vista_anterior=vista_actual, fecha_anterior=fecha_actual),
                 'backgroundColor': tarea.usuario.color if tarea.usuario else '#6c757d',
                 'borderColor': tarea.usuario.color if tarea.usuario else '#6c757d',
                 'extendedProps': {

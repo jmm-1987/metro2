@@ -204,6 +204,11 @@
         if (mostrarResueltas) {
           url += '&mostrar_resueltas=1';
         }
+        // Usar localStorage para obtener vista y fecha actual
+        const vistaActual = localStorage.getItem('vistaActual') || 'listDay';
+        const fechaActual = localStorage.getItem('fechaActual') || new Date().toISOString().split('T')[0];
+        url += '&vista_actual=' + vistaActual;
+        url += '&fecha_actual=' + fechaActual;
         // Filtro de comercial solo para admin
         {% if es_admin %}
         const filtroComercial = document.getElementById('filtro-comercial');
@@ -403,6 +408,21 @@
 
         return { domNodes: [eventNode] };
       },
+      dateClick: function(info) {
+        // Solo funcionar en vistas semanal y mensual
+        if (info.view.type === 'dayGridWeek' || info.view.type === 'dayGridMonth') {
+          // Guardar la vista actual antes de cambiar
+          localStorage.setItem('vistaAnterior', info.view.type);
+          localStorage.setItem('fechaAnterior', calendar.getDate().toISOString().split('T')[0]);
+          // Cambiar a vista de día para la fecha seleccionada
+          calendar.changeView('listDay', info.dateStr);
+        }
+      },
+      viewDidMount: function(info) {
+        // Guardar la vista actual cada vez que cambie
+        localStorage.setItem('vistaActual', info.view.type);
+        localStorage.setItem('fechaActual', calendar.getDate().toISOString().split('T')[0]);
+      },
       datesSet: function(info) {
         setTimeout(function() {
           // Eliminar encabezados previos
@@ -427,6 +447,35 @@
       }
     });
     calendar.render();
+    
+    console.log('Calendario renderizado');
+    
+    // Restaurar vista anterior desde localStorage
+    setTimeout(function() {
+      const vistaAnterior = localStorage.getItem('vistaAnterior');
+      const fechaAnterior = localStorage.getItem('fechaAnterior');
+      
+      console.log('Restaurando vista anterior:', vistaAnterior);
+      console.log('Restaurando fecha anterior:', fechaAnterior);
+      
+      if (vistaAnterior && vistaAnterior !== 'listDay') {
+        try {
+          calendar.changeView(vistaAnterior);
+          console.log('Vista restaurada exitosamente:', vistaAnterior);
+        } catch (error) {
+          console.error('Error al restaurar vista:', error);
+        }
+      }
+      
+      if (fechaAnterior) {
+        try {
+          calendar.gotoDate(fechaAnterior);
+          console.log('Fecha restaurada exitosamente:', fechaAnterior);
+        } catch (error) {
+          console.error('Error al restaurar fecha:', error);
+        }
+      }
+    }, 500);
     
     // Test para verificar que los botones de encuesta existen
     setTimeout(() => {
@@ -526,6 +575,11 @@
       .then(data => {
         console.log('Datos recibidos:', data);
         const contenido = document.getElementById('contenidoActividadCliente');
+        
+        if (!contenido) {
+          console.error('No se encontró el elemento contenidoActividadCliente');
+          return;
+        }
         
         if (data.error) {
           contenido.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
@@ -687,6 +741,35 @@
       max-width: none !important;
       flex-shrink: 1 !important;
     }
+  }
+  
+  /* Estilos para hacer los días clickeables en vistas semanal y mensual */
+  .fc-daygrid-day-number {
+    cursor: pointer !important;
+    transition: background-color 0.2s ease !important;
+  }
+  
+  .fc-daygrid-day-number:hover {
+    background-color: rgba(0, 123, 255, 0.1) !important;
+    border-radius: 4px !important;
+  }
+  
+  /* Indicar visualmente que los días son clickeables */
+  .fc-daygrid-day-number::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 6px;
+    height: 6px;
+    background-color: #007bff;
+    border-radius: 50%;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+  }
+  
+  .fc-daygrid-day-number:hover::after {
+    opacity: 1;
   }
 </style>
 {% endblock %} 
