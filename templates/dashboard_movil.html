@@ -66,6 +66,9 @@ document.addEventListener('DOMContentLoaded', function() {
       .then(render)
       .catch(()=>{ cont.innerHTML = '<div class="alert alert-danger">Error cargando tareas</div>'; });
   }
+  
+  // Hacer fetchTareas accesible globalmente para poder llamarla desde enviarEncuesta
+  window.fetchTareas = fetchTareas;
 
   function fmtHora(dateStr) {
     try {
