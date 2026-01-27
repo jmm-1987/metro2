@@ -15,6 +15,8 @@ from models import db, Usuario, Cliente, Tarea, Evento, RespuestaFormulario
 from google_calendar import crear_evento_google_calendar
 from enviar_email import enviar_email
 import os
+import shutil
+import logging
 from enviar_telegram import enviar_telegram
 from backup_manager import export_database_to_csv, import_database_from_csv, create_backup_zip
 import re
@@ -25,9 +27,33 @@ CHAT_ID_ADMIN_TELEGRAM = os.environ.get('CHAT_ID_ADMIN_TELEGRAM')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'cambia_esto_por_un_valor_seguro'
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://metro2_user:5L8bWpgBbYvx4ihoBCUI7PohMlBnqJkd@dpg-d209jqh5pdvs73c9ld3g-a.virginia-postgres.render.com/metro2'
+
+# Configurar logging después de crear la app
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Configuración de base de datos SQLite para producción
+# Asegurar que el directorio instance existe
+instance_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
+if not os.path.exists(instance_path):
+    os.makedirs(instance_path)
+    logger.info(f"Directorio 'instance' creado: {instance_path}")
+
+# Usar SQLite con ruta absoluta para producción
+db_path = os.path.join(instance_path, 'database.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Configuración de templates (recarga automática solo en desarrollo)
+if os.environ.get('FLASK_ENV') == 'development':
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+else:
+    # En producción, usar caché normal
+    app.config['TEMPLATES_AUTO_RELOAD'] = False
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000  # 1 año
+
+logger.info(f"Base de datos SQLite configurada en: {db_path}")
 
 from models import db, Usuario, Cliente, Tarea, Evento
 db.init_app(app)
@@ -60,6 +86,13 @@ def dashboard():
 @app.route('/dashboard')
 @login_required
 def dashboard_desktop():
+    # Logging para diagnóstico
+    logger.info(f"=== DASHBOARD ACCEDIDO ===")
+    logger.info(f"Usuario: {current_user.nombre}")
+    logger.info(f"Es admin: {current_user.es_admin}")
+    logger.info(f"Nombre usuario (exacto): '{current_user.nombre}'")
+    logger.info(f"Es root?: {current_user.nombre == 'root'}")
+    
     if current_user.es_admin:
         tareas = Tarea.query.options(joinedload(Tarea.usuario), joinedload(Tarea.cliente)).order_by(Tarea.fecha.asc(), Tarea.hora.asc()).all()
         clientes_list = Cliente.query.filter_by(estado='en_curso').order_by(Cliente.nombre.asc()).limit(15).all()
@@ -72,6 +105,11 @@ def dashboard_desktop():
 
     now = datetime.datetime.now()
     usuarios = Usuario.query.filter_by(activo=True).all() if current_user.es_admin else []
+    
+    logger.info(f"Renderizando dashboard.html con es_admin={current_user.es_admin}")
+    logger.info(f"Usuario es root: {current_user.nombre == 'root'}")
+    logger.info(f"Mostrando botones de respaldo/backup: {current_user.nombre == 'root'}")
+    
     return render_template('dashboard.html', tareas_por_hacer=tareas_por_hacer, tareas_resueltas=tareas_resueltas, clientes_list=clientes_list, now=now, es_admin=current_user.es_admin, usuarios=usuarios)
 
 @app.route('/dashboard_movil')
@@ -743,10 +781,19 @@ def descargar_db():
     if not current_user.es_admin:
         flash('No tienes permiso para descargar la base de datos.')
         return redirect(url_for('dashboard'))
+    
+    # Usar la misma ruta que en la configuración
+    instance_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
+    db_path = os.path.join(instance_path, 'database.db')
+    
+    if not os.path.exists(db_path):
+        flash('No se encontró el archivo de base de datos.', 'error')
+        return redirect(url_for('dashboard'))
+    
     hoy = datetime.datetime.now().strftime('%d%m%Y')
     nombre_archivo = f"metro2{hoy}.db"
     return send_file(
-        'instance/database.db',
+        db_path,
         as_attachment=True,
         download_name=nombre_archivo
     )
@@ -944,11 +991,143 @@ def panel_respaldo():
     
     return render_template('panel_respaldo.html', stats=stats)
 
+@app.route('/panel_backup')
+@login_required
+def panel_backup():
+    """Panel de backup SQLite para el usuario root"""
+    if current_user.nombre != 'root':
+        flash('Solo el usuario root puede acceder al panel de backup.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Obtener estadísticas de la base de datos
+    stats = {
+        'usuarios': Usuario.query.count(),
+        'clientes': Cliente.query.count(),
+        'tareas': Tarea.query.count(),
+        'eventos': Evento.query.count(),
+        'respuestas': RespuestaFormulario.query.count()
+    }
+    
+    # Verificar si existe el archivo de base de datos (usar ruta absoluta)
+    instance_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
+    db_path = os.path.join(instance_path, 'database.db')
+    db_exists = os.path.exists(db_path)
+    db_size = 0
+    if db_exists:
+        db_size = os.path.getsize(db_path)
+    
+    return render_template('panel_backup.html', stats=stats, db_exists=db_exists, db_size=db_size)
+
+@app.route('/descargar_sqlite')
+@login_required
+def descargar_sqlite():
+    """Descargar el archivo completo de la base de datos SQLite"""
+    if current_user.nombre != 'root':
+        flash('Solo el usuario root puede descargar la base de datos SQLite.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Usar la misma ruta que en la configuración
+    instance_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
+    db_path = os.path.join(instance_path, 'database.db')
+    
+    if not os.path.exists(db_path):
+        flash('No se encontró el archivo de base de datos.', 'error')
+        return redirect(url_for('panel_backup'))
+    
+    hoy = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    nombre_archivo = f"metro2_backup_{hoy}.db"
+    return send_file(
+        db_path,
+        as_attachment=True,
+        download_name=nombre_archivo
+    )
+
+@app.route('/importar_sqlite', methods=['GET', 'POST'])
+@login_required
+def importar_sqlite():
+    """Importar un archivo SQLite completo"""
+    if current_user.nombre != 'root':
+        flash('Solo el usuario root puede importar la base de datos SQLite.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        try:
+            # Verificar que se subió un archivo
+            if 'archivo_db' not in request.files:
+                flash('No se seleccionó ningún archivo.', 'error')
+                return redirect(url_for('importar_sqlite'))
+            
+            archivo = request.files['archivo_db']
+            if archivo.filename == '':
+                flash('No se seleccionó ningún archivo.', 'error')
+                return redirect(url_for('importar_sqlite'))
+            
+            # Verificar que es un archivo .db
+            if not archivo.filename.endswith('.db'):
+                flash('El archivo debe ser una base de datos SQLite (.db).', 'error')
+                return redirect(url_for('importar_sqlite'))
+            
+            # Verificar confirmación
+            if not request.form.get('confirmar'):
+                flash('Debes confirmar que has hecho un respaldo antes de importar.', 'error')
+                return redirect(url_for('importar_sqlite'))
+            
+            # Cerrar todas las conexiones de la base de datos actual
+            db.session.close()
+            db.engine.dispose()
+            
+            # Usar la misma ruta que en la configuración
+            instance_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
+            if not os.path.exists(instance_path):
+                os.makedirs(instance_path)
+            
+            db_path = os.path.join(instance_path, 'database.db')
+            
+            # Crear respaldo del archivo actual antes de reemplazarlo
+            if os.path.exists(db_path):
+                backup_path = os.path.join(instance_path, f'database_backup_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.db')
+                shutil.copy2(db_path, backup_path)
+                flash(f'Se creó un respaldo automático: {os.path.basename(backup_path)}', 'info')
+            
+            # Guardar el nuevo archivo
+            archivo.save(db_path)
+            
+            # Reinicializar la conexión a la base de datos
+            # No necesitamos reinicializar, solo reconectar
+            db.session.close()
+            db.engine.dispose()
+            
+            flash('Base de datos SQLite importada correctamente. Se creó un respaldo del archivo anterior. Puede que necesites recargar la página.', 'success')
+            return redirect(url_for('panel_backup'))
+            
+        except Exception as e:
+            flash(f'Error al importar la base de datos: {str(e)}', 'error')
+            return redirect(url_for('importar_sqlite'))
+    
+    return render_template('importar_sqlite.html')
+
+
+# Inicializar base de datos al importar el módulo (para producción con gunicorn)
+with app.app_context():
+    try:
+        db.create_all()
+        logger.info("Base de datos SQLite inicializada correctamente")
+    except Exception as e:
+        logger.error(f"Error al inicializar base de datos: {e}")
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    
     # Usar el puerto de Render o 5000 por defecto
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False) 
+    debug_mode = os.environ.get('FLASK_ENV') == 'development'
+    
+    print("=" * 60)
+    print("INICIANDO APLICACIÓN FLASK")
+    print("=" * 60)
+    print(f"Puerto: {port}")
+    print(f"URL: http://127.0.0.1:{port}")
+    print(f"Modo debug: {debug_mode}")
+    print(f"Base de datos: SQLite")
+    print(f"Ruta BD: {db_path}")
+    print("=" * 60)
+    
+    app.run(host='0.0.0.0', port=port, debug=debug_mode, use_reloader=debug_mode) 

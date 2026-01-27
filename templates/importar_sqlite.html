@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}Importar Base de Datos SQLite{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-upload"></i> Importar Base de Datos SQLite
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5><i class="bi bi-exclamation-triangle"></i> ¡ADVERTENCIA CRÍTICA!</h5>
+                        <p class="mb-0">
+                            Esta operación <strong>REEMPLAZARÁ COMPLETAMENTE</strong> la base de datos actual con el archivo SQLite que subas. 
+                            <strong>TODOS los datos actuales se perderán</strong> y serán reemplazados por los datos del archivo importado.
+                        </p>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-4">
+                            <label for="archivo_db" class="form-label">
+                                <strong>Seleccionar archivo SQLite (.db):</strong>
+                            </label>
+                            <input type="file" class="form-control" id="archivo_db" name="archivo_db" 
+                                   accept=".db" required>
+                            <div class="form-text">
+                                Selecciona el archivo .db de SQLite que quieres importar. 
+                                Este archivo reemplazará completamente la base de datos actual.
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="alert alert-info">
+                                <h6><i class="bi bi-info-circle"></i> Información importante:</h6>
+                                <ul class="mb-0">
+                                    <li>Se creará automáticamente un respaldo del archivo actual antes de la importación</li>
+                                    <li>El archivo debe ser una base de datos SQLite válida</li>
+                                    <li>La aplicación se reiniciará la conexión a la base de datos después de la importación</li>
+                                    <li>Es recomendable hacer un respaldo manual adicional antes de proceder</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirmar" name="confirmar" required>
+                                <label class="form-check-label" for="confirmar">
+                                    <strong>Confirmo que he hecho un respaldo de la base de datos actual y entiendo que todos los datos serán reemplazados</strong>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('panel_backup') }}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger" id="btn-importar" disabled>
+                                <i class="bi bi-upload"></i> Importar Base de Datos SQLite
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Información adicional -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Proceso de importación</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Pasos que se realizarán:</h6>
+                    <ol>
+                        <li>Se verifica que el archivo sea válido</li>
+                        <li>Se cierra la conexión actual a la base de datos</li>
+                        <li>Se crea un respaldo automático del archivo database.db actual</li>
+                        <li>Se reemplaza el archivo database.db con el archivo importado</li>
+                        <li>Se reinicializa la conexión a la base de datos</li>
+                        <li>Se confirma la importación exitosa</li>
+                    </ol>
+                    
+                    <h6 class="mt-3">Requisitos del archivo:</h6>
+                    <ul class="mb-0">
+                        <li>Debe ser un archivo .db válido de SQLite</li>
+                        <li>Debe contener todas las tablas necesarias (usuarios, clientes, tareas, eventos, respuestas_formulario)</li>
+                        <li>Debe tener la misma estructura que la base de datos actual</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmarCheckbox = document.getElementById('confirmar');
+    const btnImportar = document.getElementById('btn-importar');
+    
+    confirmarCheckbox.addEventListener('change', function() {
+        btnImportar.disabled = !this.checked;
+    });
+    
+    // Confirmación adicional antes de importar
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (!confirm('¿Estás ABSOLUTAMENTE seguro de que quieres importar esta base de datos SQLite?\n\nEsto reemplazará COMPLETAMENTE todos los datos actuales.\n\nEsta acción NO se puede deshacer fácilmente.')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}
+

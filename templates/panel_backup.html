@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}Panel de Backup SQLite{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="bi bi-database text-info"></i> 
+                Panel de Backup SQLite - Solo Root
+            </h2>
+            
+            <!-- Información de la base de datos actual -->
+            {% if db_exists %}
+            <div class="alert alert-info">
+                <h5><i class="bi bi-info-circle"></i> Estado de la Base de Datos</h5>
+                <p class="mb-0">
+                    <strong>Archivo:</strong> instance/database.db<br>
+                    <strong>Tamaño:</strong> {{ "%.2f"|format(db_size / 1024 / 1024) }} MB<br>
+                    <strong>Estado:</strong> <span class="badge bg-success">Activa</span>
+                </p>
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+                <h5><i class="bi bi-exclamation-triangle"></i> Advertencia</h5>
+                <p class="mb-0">No se encontró el archivo de base de datos SQLite.</p>
+            </div>
+            {% endif %}
+            
+            <!-- Estadísticas de la base de datos -->
+            <div class="row mb-4">
+                <div class="col-md-2">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h3>{{ stats.usuarios }}</h3>
+                            <p class="mb-0">Usuarios</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h3>{{ stats.clientes }}</h3>
+                            <p class="mb-0">Clientes</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h3>{{ stats.tareas }}</h3>
+                            <p class="mb-0">Tareas</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body text-center">
+                            <h3>{{ stats.eventos }}</h3>
+                            <p class="mb-0">Eventos</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body text-center">
+                            <h3>{{ stats.respuestas }}</h3>
+                            <p class="mb-0">Respuestas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones de backup SQLite -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-download"></i> Descargar Base de Datos SQLite
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Descarga el archivo completo de la base de datos SQLite (.db).</p>
+                            <p class="text-muted small">
+                                <strong>Incluye:</strong> Todos los datos en formato SQLite nativo
+                            </p>
+                            {% if db_exists %}
+                            <a href="{{ url_for('descargar_sqlite') }}" class="btn btn-success">
+                                <i class="bi bi-download"></i> Descargar Base de Datos SQLite
+                            </a>
+                            {% else %}
+                            <button class="btn btn-success" disabled>
+                                <i class="bi bi-download"></i> Base de datos no disponible
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-upload"></i> Importar Base de Datos SQLite
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Importa un archivo SQLite completo. <strong class="text-danger">¡CUIDADO!</strong> Esto reemplazará TODA la base de datos actual.</p>
+                            <p class="text-muted small">
+                                <strong>Requerido:</strong> Archivo .db válido de SQLite
+                            </p>
+                            <a href="{{ url_for('importar_sqlite') }}" class="btn btn-danger">
+                                <i class="bi bi-upload"></i> Importar Base de Datos SQLite
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información importante -->
+            <div class="alert alert-warning mt-4">
+                <h5><i class="bi bi-exclamation-triangle"></i> Información Importante</h5>
+                <ul class="mb-0">
+                    <li><strong>Descargar:</strong> Obtiene una copia completa del archivo database.db</li>
+                    <li><strong>Importar:</strong> Reemplaza COMPLETAMENTE la base de datos actual con el archivo importado</li>
+                    <li><strong>Respaldo automático:</strong> Se crea un respaldo automático antes de importar</li>
+                    <li><strong>Formato:</strong> Solo se aceptan archivos .db válidos de SQLite</li>
+                    <li><strong>Advertencia:</strong> La importación cerrará la sesión actual y reiniciará la conexión a la base de datos</li>
+                </ul>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver al Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
