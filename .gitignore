@@ -1,0 +1,81 @@
+# Base de datos SQLite
+instance/database.db
+instance/database_backup_*.db
+instance/*.db
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Entornos virtuales
+venv/
+ENV/
+env/
+.venv
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Archivos temporales
+*.tmp
+*.bak
+*.swp
+*~
+
+# Archivos de sistema
+Thumbs.db
+.DS_Store
+
+# Archivos de respaldo
+*.backup
+backup_*.zip
+backup_*.db
+
+# Archivos de exportación temporal
+export_csv/*.csv
+!export_csv/.gitkeep
+
+# Archivos de Google Calendar (credenciales)
+credentials.json
+token.json
+
+# Archivos de configuración local
+config.local.py
+settings.local.py
+
