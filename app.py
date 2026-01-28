@@ -1112,8 +1112,25 @@ with app.app_context():
     try:
         db.create_all()
         logger.info("Base de datos SQLite inicializada correctamente")
+        
+        # Crear usuario root automáticamente si no existe
+        if not Usuario.query.filter_by(nombre='root').first():
+            root_password = '7GMZ%elA'
+            root = Usuario(
+                nombre='root',
+                password=generate_password_hash(root_password),
+                es_admin=True,
+                activo=True
+            )
+            db.session.add(root)
+            db.session.commit()
+            logger.info("Usuario root creado automáticamente: root / 7GMZ%elA")
+        else:
+            logger.info("Usuario root ya existe")
+            
     except Exception as e:
         logger.error(f"Error al inicializar base de datos: {e}")
+        db.session.rollback()
 
 if __name__ == '__main__':
     # Usar el puerto de Render o 5000 por defecto
